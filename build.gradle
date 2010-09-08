@@ -1,0 +1,22 @@
+apply plugin: 'java'
+
+def utf8 = 'UTF-8'
+def java = '8'
+
+compileJava {
+	options.encoding = utf8
+	sourceCompatibility = java
+	targetCompatibility = java
+}
+
+javadoc {
+	destinationDir = file("doc")
+	options.links("https://docs.oracle.com/en/java/javase/$java/docs/api/")
+	options.header("<a href='http://nextzlog.github.io/leaf'>Leaf API</a>")
+	options.charSet = options.encoding = utf8
+}
+
+jar {
+	manifest.attributes 'Main-Class': 'Demo'
+	manifest.attributes 'SplashScreen-Image': 'leaf/icon/images/welcome.png'
+}
