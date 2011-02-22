@@ -1,11 +1,12 @@
 /**************************************************************************************
 月白プロジェクト Java 拡張ライブラリ 開発コードネーム「Leaf」
 始動：2010年6月8日
-バージョン：Edition 1.0
+バージョン：Edition 1.1
 開発言語：Pure Java SE 6
-開発者：東大アマチュア無線クラブ2010年度新入生 川勝孝也
+開発者：東大アマチュア無線クラブ 川勝孝也
 ***************************************************************************************
-「Leaf」は「月白エディタ」1.2以降及び「Jazlog(ZLOG3.0)」用に開発されたライブラリです
+License Documents: See the license.txt (under the folder 'readme')
+Author: University of Tokyo Amateur Radio Club / License: GPL
 **************************************************************************************/
 import java.awt.*;
 import java.awt.event.*;
@@ -15,6 +16,7 @@ import leaf.icon.*;
 import leaf.components.*;
 import leaf.components.taskpane.*;
 import leaf.components.text.*;
+import leaf.dialog.LeafConsoleDialog;
 import leaf.document.*;
 
 /**
@@ -25,17 +27,17 @@ import leaf.document.*;
 
 public class Demo extends LeafFrame{
 	public static void main(String[] args){
+		setDefaultLookAndFeel();
 		new Demo().setVisible(true);
 	}
 	public Demo(){
-		super("Great Program World with Leaf");
+		super("Great Program World !!");
 		setSize(400,600);
 		setIconImage(new LeafIcons().getIcon("logo").getImage());
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
 		LeafTaskPane taskpane = new LeafTaskPane();
 		add(taskpane,BorderLayout.CENTER);
-		
 		
 		LeafExpandPane panel1 = new LeafExpandPane("LeafTextPane + LeafTextScrollPane"){
 			public JComponent setContent(){
@@ -45,9 +47,10 @@ public class Demo extends LeafFrame{
 				textpane.setEOFVisible(true);
 				textpane.setEditorKit(LeafStyledDocument.getEditorKit());
 				((LeafStyledDocument)textpane.getDocument()).setAutoIndentEnabled(true);
-				textpane.setText("Auto Indent.");
+				textpane.setText("Auto Indent.\n\t");
 				textpane.setFont(new Font(Font.MONOSPACED,Font.PLAIN,16));
 				LeafTextScrollPane scroll = new LeafTextScrollPane(textpane);
+				scroll.getViewport().setOpaque(true);
 				scroll.getViewport().setBackground(Color.WHITE);
 				cont.add(scroll);
 				return cont;
@@ -72,7 +75,15 @@ public class Demo extends LeafFrame{
 		LeafExpandPane panel3 = new LeafExpandPane("Welcome"){
 			public JComponent setContent(){
 				JPanel cont = new JPanel(new BorderLayout());
-				JLabel label = new JLabel(new LeafIcons().getIcon("welcome"));
+				JLabel label = new JLabel(
+					"<html><center>Under the GPL (GNU General Public License)</center>"
+					+"<br>Copyright(C) 2010 by University of Tokyo Amateur Radio Club"
+					+"<center>See the 'license.txt' for the license details</center>",
+					new LeafIcons().getIcon("welcome"),
+					JLabel.CENTER
+				);
+				label.setHorizontalTextPosition(JLabel.CENTER);
+				label.setVerticalTextPosition(JLabel.BOTTOM);
 				cont.add(label);
 				return cont;
 			}
@@ -89,5 +100,12 @@ public class Demo extends LeafFrame{
 			}
 		});
 		add(button,BorderLayout.SOUTH);
+		
+		new LeafConsoleDialog(this).setSystemOutAndErr();
+	}
+	private static void setDefaultLookAndFeel(){
+		try{
+			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+		}catch(Exception ex){}
 	}
 }

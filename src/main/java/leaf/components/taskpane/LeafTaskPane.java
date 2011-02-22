@@ -1,11 +1,12 @@
 /**************************************************************************************
 月白プロジェクト Java 拡張ライブラリ 開発コードネーム「Leaf」
 始動：2010年6月8日
-バージョン：Edition 1.0
+バージョン：Edition 1.1
 開発言語：Pure Java SE 6
-開発者：東大アマチュア無線クラブ2010年度新入生 川勝孝也
+開発者：東大アマチュア無線クラブ 川勝孝也
 ***************************************************************************************
-「Leaf」は「月白エディタ」1.2以降及び「Jazlog(ZLOG3.0)」用に開発されたライブラリです
+License Documents: See the license.txt (under the folder 'readme')
+Author: University of Tokyo Amateur Radio Club / License: GPL
 **************************************************************************************/
 package leaf.components.taskpane;
 
@@ -48,13 +49,54 @@ public class LeafTaskPane extends JScrollPane{
 		});
 	}
 	/**
-	*コンポーネントを末尾に追加します。
+	*指定されたコンポーネントを末尾に追加します。
 	*@param comp 追加するコンポーネント
+	*@return 追加したコンポーネント
 	*/
-	public void addComp(Component comp){
+	public Component addComp(Component comp){
 		box.remove(glue);
 		box.add(Box.createVerticalStrut(5));
 		box.add(comp);
+		box.add(glue);
+		box.revalidate();
+		return comp;
+	}
+	/**
+	*指定されたコンポーネントを指定された位置に追加します。
+	*@param comp 追加するコンポーネント
+	*@param index 追加する位置
+	*@return 追加したコンポーネント
+	*/
+	public Component addComp(Component comp, int index){
+		if(index<box.getComponentCount()-1){
+			box.add(comp,index);
+			box.revalidate();
+		}
+		return comp;
+	}
+	/**
+	*指定されたコンポーネントを削除します。
+	*@param comp 削除するコンポーネント
+	*/
+	public void remove(Component comp){
+		box.remove(comp);
+		box.revalidate();
+	}
+	/**
+	*指定された位置のコンポーネントを削除します。
+	*@param index コンポーネントの順番
+	*/
+	public void remove(int index){
+		if(index<box.getComponentCount()-1){
+			box.remove(index);
+			box.revalidate();
+		}
+	}
+	/**
+	*全てのコンポーネントを削除します。
+	*/
+	public void removeAll(){
+		box.removeAll();
 		box.add(glue);
 		box.revalidate();
 	}

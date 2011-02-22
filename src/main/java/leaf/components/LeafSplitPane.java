@@ -1,11 +1,12 @@
 /**************************************************************************************
 月白プロジェクト Java 拡張ライブラリ 開発コードネーム「Leaf」
 始動：2010年6月8日
-バージョン：Edition 1.0
+バージョン：Edition 1.1
 開発言語：Pure Java SE 6
-開発者：東大アマチュア無線クラブ2010年度新入生 川勝孝也
+開発者：東大アマチュア無線クラブ 川勝孝也
 ***************************************************************************************
-「Leaf」は「月白エディタ」1.2以降及び「Jazlog(ZLOG3.0)」用に開発されたライブラリです
+License Documents: See the license.txt (under the folder 'readme')
+Author: University of Tokyo Amateur Radio Club / License: GPL
 **************************************************************************************/
 package leaf.components;
 
@@ -13,8 +14,8 @@ import java.awt.*;
 import javax.swing.*;
 
 /**
-*画面分割用のコンポーネントです。<br>
-*JSplitPaneと異なり、非分割状態にできます。
+*画面分割用のコンポーネントです。
+*
 *@author 東大アマチュア無線クラブ
 *@since Leaf 1.0 作成：2010年3月29日
 */
@@ -43,7 +44,7 @@ public class LeafSplitPane extends JPanel{
 	private JComponent comp1,comp2;
 	
 	/**
-	*メインとなる内部コンポーネントの位置と分割方向を指定してこのコンポーネントを生成します。
+	*メインとなる内部コンポーネントの位置と分割方向を指定して分割パネルを生成します。
 	*@param main 
 	*/
 	public LeafSplitPane(boolean main,int orient){
@@ -53,17 +54,17 @@ public class LeafSplitPane extends JPanel{
 		this.main = main;
 		split = new JSplitPane(this.orient = orient);
 		split.setOneTouchExpandable(true);
-		this.setLayout(new BorderLayout());
+		setLayout(new BorderLayout());
 	}
 	/**
 	*左（上）のコンポーネントと右（下）のコンポーネントを指定して追加します。
 	*@param comp1 左（上）の内部コンポーネント
 	*@param comp2 右（下）の内部コンポーネント
 	*/
-	public void addComponent(JComponent comp1,JComponent comp2){
+	public void add(JComponent comp1,JComponent comp2){
 		this.comp1 = comp1;
 		this.comp2 = comp2;
-		this.add(getMainComponent(),BorderLayout.CENTER);
+		add(getMainComponent(), BorderLayout.CENTER);
 	}
 	/**
 	*メインとなる内部コンポーネントを返します。
@@ -85,17 +86,19 @@ public class LeafSplitPane extends JPanel{
 	*/
 	public void setSplitted(boolean opt){
 		if(opt&&splitted==NOT_SPLITTED){
-			this.remove(comp1);
+			remove(comp1);
 			split.setTopComponent(comp1);
 			split.setBottomComponent(comp2);
-			this.add(split,BorderLayout.CENTER);
-			split.setDividerLocation((this.getHeight()-split.getDividerSize())/2);
+			add(split,BorderLayout.CENTER);
+			split.setDividerLocation((getHeight()-split.getDividerSize())/2);
 		}else if(!opt&&splitted==SPLITTED){
-			this.remove(split);
+			remove(split);
 			split.remove(comp1);
 			split.remove(comp2);
-			this.add(getMainComponent(),BorderLayout.CENTER);
-		}this.repaint();splitted = !splitted;
+			add(getMainComponent(),BorderLayout.CENTER);
+		}
+		repaint();
+		splitted = !splitted;
 	}
 	/**
 	*この分割コンポーネントが分割されているか返します。

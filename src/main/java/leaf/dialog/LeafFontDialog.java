@@ -1,11 +1,12 @@
 /**************************************************************************************
 月白プロジェクト Java 拡張ライブラリ 開発コードネーム「Leaf」
 始動：2010年6月8日
-バージョン：Edition 1.0
+バージョン：Edition 1.1
 開発言語：Pure Java SE 6
-開発者：東大アマチュア無線クラブ2010年度新入生 川勝孝也
+開発者：東大アマチュア無線クラブ 川勝孝也
 ***************************************************************************************
-「Leaf」は「月白エディタ」1.2以降及び「Jazlog(ZLOG3.0)」用に開発されたライブラリです
+License Documents: See the license.txt (under the folder 'readme')
+Author: University of Tokyo Amateur Radio Club / License: GPL
 **************************************************************************************/
 package leaf.dialog;
 
@@ -24,19 +25,14 @@ import leaf.components.text.LeafTextField;
 *@author 東大アマチュア無線クラブ
 *@since Leaf 1.0 作成：2008年10月 改良：2010年5月22日
 */
-public class LeafFontDialog extends LeafDialog
+public final class LeafFontDialog extends LeafDialog
 	implements ActionListener,ListSelectionListener,DocumentListener{
 	
 	/**秘匿フィールド*/
 	private Font font = new Font(Font.MONOSPACED,Font.PLAIN,13);
 	private String hist="";
-	private final String[] sname;
-	private final String[] sst = {
-		LeafLangManager.get("Plain","標準"),
-		LeafLangManager.get("Italic","斜体"),
-		LeafLangManager.get("Bold","太字"),
-		LeafLangManager.get("Bold Italic","太字 斜体")
-	};
+	private String[] sname;
+	private String[] sst;
 	private final String[] ssize = {
 		"8","9","10","11","12","13","14","15","16",
 		"18","20","22","24","26","28","36","48","72"
@@ -53,13 +49,14 @@ public class LeafFontDialog extends LeafDialog
 	private JPanel sampanel;
 	
 	/**
-	*親フレームを指定してファイル選択ダイアログを生成します。
-	*@param parent 親フレーム
+	*親フレームを指定してフォント選択ダイアログを生成します。
+	*@param owner 親フレーム
 	*/
-	public LeafFontDialog(JFrame parent){
+	public LeafFontDialog(Frame owner){
 		
-		super(parent,null,true);
-		setSize(520,300);
+		super(owner,null,true);
+		getContentPane().setPreferredSize(new Dimension(500,260));
+		pack();
 		setResizable(false);
 		addWindowListener(new WindowAdapter(){
 			public void windowClosing(WindowEvent e){
@@ -69,9 +66,26 @@ public class LeafFontDialog extends LeafDialog
 		});
 		setLayout(null);
 
-		ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
-		sname = ge.getAvailableFontFamilyNames();
+		init();
+	}
+	/**
+	*親ダイアログを指定してフォント選択ダイアログを生成します。
+	*@param owner 親フレーム
+	*/
+	public LeafFontDialog(Dialog owner){
 		
+		super(owner,null,true);
+		getContentPane().setPreferredSize(new Dimension(500,260));
+		pack();
+		setResizable(false);
+		addWindowListener(new WindowAdapter(){
+			public void windowClosing(WindowEvent e){
+				change = CANCEL_OPTION;
+				dispose();
+			}
+		});
+		setLayout(null);
+
 		init();
 	}
 	/**
@@ -80,6 +94,16 @@ public class LeafFontDialog extends LeafDialog
 	public void init(){
 		
 		setTitle(LeafLangManager.get("Font","フォント"));
+		
+		ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+		sname = ge.getAvailableFontFamilyNames();
+		
+		String[] sst = {
+			LeafLangManager.get("Plain","標準"),
+			LeafLangManager.get("Italic","斜体"),
+			LeafLangManager.get("Bold","太字"),
+			LeafLangManager.get("Bold Italic","太字 斜体")
+		};
 		
 		getContentPane().removeAll();
 		
@@ -228,10 +252,8 @@ public class LeafFontDialog extends LeafDialog
 	*/
 	public Font showDialog(Font font){
 		this.font = font;
-		//フォント名
 		namelist.setSelectedValue(font.getFamily(),false);
 		namef.setText(font.getFamily());
-		//字体
 		String fs;
 		if(font.getStyle()==Font.PLAIN)fs=LeafLangManager.get("Plain","標準");
 		else if(font.getStyle()==Font.ITALIC)fs=LeafLangManager.get("Italic","斜体");
@@ -239,10 +261,8 @@ public class LeafFontDialog extends LeafDialog
 		else fs=LeafLangManager.get("Bold Italic","太字 斜体");
 		stf.setText(fs);
 		stlist.setSelectedValue(fs,true);
-		//サイズ
 		sizef.setText(""+font.getSize());
 		sizelist.setSelectedValue(String.valueOf(font.getSize()),true);
-		//表示(モーダル)
 		super.setVisible(true);
 		if(change==OK_OPTION)return this.font;
 		else return font;//そのまま返す

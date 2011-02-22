@@ -1,11 +1,12 @@
 /**************************************************************************************
 月白プロジェクト Java 拡張ライブラリ 開発コードネーム「Leaf」
 始動：2010年6月8日
-バージョン：Edition 1.0
+バージョン：Edition 1.1
 開発言語：Pure Java SE 6
-開発者：東大アマチュア無線クラブ2010年度新入生 川勝孝也
+開発者：東大アマチュア無線クラブ 川勝孝也
 ***************************************************************************************
-「Leaf」は「月白エディタ」1.2以降及び「Jazlog(ZLOG3.0)」用に開発されたライブラリです
+License Documents: See the license.txt (under the folder 'readme')
+Author: University of Tokyo Amateur Radio Club / License: GPL
 **************************************************************************************/
 package leaf.cursor;
 
@@ -22,8 +23,6 @@ import java.awt.geom.Arc2D;
 */
 public class LeafCursorFactory{
 	
-	/**カーソルの名称です*/
-	public static final String CURSOR_NAME = "CUSTOM_CURSOR";
 	
 	private static final double RADIUS = 0.25;
 	
@@ -53,9 +52,7 @@ public class LeafCursorFactory{
 				Point spot = new Point(0,0);
 				Toolkit kit = Toolkit.getDefaultToolkit();
 				cursor = kit.createCustomCursor(image,spot,cursor.getName());
-			}catch(Exception ex){
-				ex.printStackTrace();
-			}
+			}catch(Exception ex){}
 		}
 		return cursor;
 	}

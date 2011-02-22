@@ -1,11 +1,12 @@
 /**************************************************************************************
 月白プロジェクト Java 拡張ライブラリ 開発コードネーム「Leaf」
 始動：2010年6月8日
-バージョン：Edition 1.0
+バージョン：Edition 1.1
 開発言語：Pure Java SE 6
-開発者：東大アマチュア無線クラブ2010年度新入生 川勝孝也
+開発者：東大アマチュア無線クラブ 川勝孝也
 ***************************************************************************************
-「Leaf」は「月白エディタ」1.2以降及び「Jazlog(ZLOG3.0)」用に開発されたライブラリです
+License Documents: See the license.txt (under the folder 'readme')
+Author: University of Tokyo Amateur Radio Club / License: GPL
 **************************************************************************************/
 package leaf.components.table;
 
@@ -20,10 +21,10 @@ import javax.swing.text.View;
 import leaf.manager.LeafLangManager;
 
 /**
-*JTable用のページ分割操作用コンポーネントです。<br>
-*指定した最大数のアイテムだけを同時に表示し、<br>
-*それ以外のアイテムはページを切り替えることで表示します。<br>
-*このクラスを利用する場合、RowSorterは使用してはなりません。
+*{@link JTable}用のページ分割操作用コンポーネントです。
+*指定した最大数のアイテムだけを同時に表示し、それ以外の
+*アイテムはページを切り替えることで表示します。このクラス
+*を利用する場合、{@link RowSorter}は使用してはなりません。
 *@author 東大アマチュア無線クラブ
 *@since Leaf 1.0 作成：2010年8月6日
 */
@@ -38,7 +39,7 @@ public class LeafTablePaginatePane extends JPanel{
 	
 	/**
 	*JTableを指定して分割操作コンポーネントを生成します。
-	*<br>インスタンスは{@link #init(int,int)}で必ず初期化してください。
+	*インスタンスは{@link #init(int,int)}で必ず初期化してください。
 	*@param table 操作対象のJTable
 	*/
 	public LeafTablePaginatePane(JTable table){

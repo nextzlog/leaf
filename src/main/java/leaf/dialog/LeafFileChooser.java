@@ -1,41 +1,41 @@
 /**************************************************************************************
 月白プロジェクト Java 拡張ライブラリ 開発コードネーム「Leaf」
 始動：2010年6月8日
-バージョン：Edition 1.0
+バージョン：Edition 1.1
 開発言語：Pure Java SE 6
-開発者：東大アマチュア無線クラブ2010年度新入生 川勝孝也
+開発者：東大アマチュア無線クラブ 川勝孝也
 ***************************************************************************************
-「Leaf」は「月白エディタ」1.2以降及び「Jazlog(ZLOG3.0)」用に開発されたライブラリです
+License Documents: See the license.txt (under the folder 'readme')
+Author: University of Tokyo Amateur Radio Club / License: GPL
 **************************************************************************************/
 package leaf.dialog;
 
 import java.awt.*;
-import java.awt.event.*;
-import java.beans.*;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.io.File;
-import java.util.ArrayList;
 import javax.swing.*;
 import javax.swing.filechooser.*;
 
+import leaf.manager.LeafCharsetManager;
 import leaf.manager.LeafLangManager;
 
 /**
 *画像プレビュー機能、文字コード指定用コンボボックスを持ったファイルチューザです。
 *@author 東大アマチュア無線クラブ
 *@since Leaf 1.0 作成：2010年5月30日
-*@see chooser.LeafActiveFileFilter
+*@see leaf.manager.LeafFileFilter
 */
-public class LeafFileChooser extends JFileChooser implements PropertyChangeListener{
+public class LeafFileChooser extends JFileChooser{
 
 	/**フィールド*/
 	private JPanel mainpanel,subpanel;
 	private JScrollPane scroll;
 	private JLabel label1,label2,label3;
 	private JComboBox comb;
-	private final String[] encodings = {"SJIS","JIS","EUC-JP","UTF8","UTF-16"};
 
 	/**
-	*LeafFileChooserを作成します。
+	*チューザを生成します。
 	*/
 	public LeafFileChooser(){
 		super();
@@ -43,17 +43,24 @@ public class LeafFileChooser extends JFileChooser implements PropertyChangeListe
 	}
 	/**チューザを初期化します。*/
 	public void init(){
-		this.setFileHidingEnabled(true);
-		this.setDragEnabled(true);
+		
+		setFileHidingEnabled(true);
+		setDragEnabled(true);
+		
 		/*プレビュー*/
-		mainpanel = new JPanel();
-		label1 = new JLabel("  "+LeafLangManager.get("Image","画像"));
+		label1 = new JLabel(LeafLangManager.get("Image","画像"),JLabel.CENTER);
 		label1.setPreferredSize(new Dimension(200,20));
 		label2 = new JLabel();
 		scroll = new JScrollPane(label2);
-		label3 = new JLabel(" "+LeafLangManager.get("Character Code","文字コード：")+" ");
-		comb   = new JComboBox(encodings);
+		
+		/*文字コード指定*/
+		label3 = new JLabel(LeafLangManager.get(
+			"Character Code","文字コード："),JLabel.CENTER);
+		comb   = new JComboBox(LeafCharsetManager.getCharsetNames());
 		comb.setEditable(false);
+		
+		/*アクセサリ*/
+		mainpanel = new JPanel();
 		subpanel = new JPanel();
 		subpanel.setPreferredSize(new Dimension(200,20));
 		subpanel.setLayout(new BorderLayout());
@@ -64,23 +71,32 @@ public class LeafFileChooser extends JFileChooser implements PropertyChangeListe
 		mainpanel.add(scroll,BorderLayout.CENTER);
 		mainpanel.add(subpanel,BorderLayout.SOUTH);
 		mainpanel.setPreferredSize(new Dimension(200,0));
-		this.setAccessory(mainpanel);
-		this.addPropertyChangeListener(this);
+		
+		setAccessory(mainpanel);
+		
+		addPropertyChangeListener(new PropertyChangeListener(){
+			public void propertyChange(PropertyChangeEvent e) {
+				File file = getSelectedFile();
+				try{
+					ImageIcon icon = new ImageIcon(getSelectedFile().getPath());
+					if(icon.getIconWidth()>label2.getWidth()){
+						Image img = icon.getImage().getScaledInstance(
+							label2.getWidth(),-1,Image.SCALE_FAST
+						);
+						icon = new ImageIcon(img);
+					}
+					label2.setIcon(icon);
+				}catch(Exception ex){
+					label2.setIcon(null);
+				}
+			}
+		});
 	}
 	/**ダイアログのリサイズを制限する目的でオーバーライドされます。*/
 	protected JDialog createDialog(Component parent) throws HeadlessException{
 		JDialog dialog = super.createDialog(parent);
 		dialog.setResizable(false);
 		return dialog;
-	}
-	/**画像プレビューの表示を更新するために実装されます。*/
-	public void propertyChange(PropertyChangeEvent e) {
-		File file = getSelectedFile();
-		try{
-			label2.setIcon(new ImageIcon(file.getPath()));
-		}catch(Exception ex){
-			label2.setIcon(null);
-		}
 	}
 	/**
 	*ユーザーにより選択された文字コードを取得します。

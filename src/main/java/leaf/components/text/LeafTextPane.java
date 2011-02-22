@@ -1,11 +1,12 @@
 /**************************************************************************************
 月白プロジェクト Java 拡張ライブラリ 開発コードネーム「Leaf」
 始動：2010年6月8日
-バージョン：Edition 1.0
+バージョン：Edition 1.1
 開発言語：Pure Java SE 6
-開発者：東大アマチュア無線クラブ2010年度新入生 川勝孝也
+開発者：東大アマチュア無線クラブ 川勝孝也
 ***************************************************************************************
-「Leaf」は「月白エディタ」1.2以降及び「Jazlog(ZLOG3.0)」用に開発されたライブラリです
+License Documents: See the license.txt (under the folder 'readme')
+Author: University of Tokyo Amateur Radio Club / License: GPL
 **************************************************************************************/
 package leaf.components.text;
 
@@ -20,18 +21,17 @@ import java.awt.font.TextAttribute;
 import leaf.document.*;
 
 /**
-*改行記号や水平タブ、[EOF]、行カーソルの表示機能を持つJTextPaneです。<br>
+*改行記号や水平タブ、[EOF]、行カーソルの表示機能を持つJTextPaneです。
 *@author 東大アマチュア無線クラブ
 *@since Leaf 1.0 作成：2010年5月22日
 */
 
 public class LeafTextPane extends JTextPane{
 	
-	/**フィールド*/
 	private DefaultCaret caret;
+	private Color color = Color.BLUE;
 	private int tabsize = 8;
-	private boolean eofvisible = false,linecursorvisible = false;
-	private Color cursorcolor = Color.BLUE;
+	private boolean isEOFVisible = true, isLineCursorVisible = true;
 	
 	/**
 	*テキスト領域を生成します。
@@ -58,20 +58,29 @@ public class LeafTextPane extends JTextPane{
 		setSelectionColor(Color.BLACK);
 		setSelectedTextColor(Color.WHITE);
 		setTabSize(tabsize);
+		setDragEnabled(true);
+	}
+	/**
+	*ドキュメントを設定します。
+	*@param doc ドキュメント
+	*/
+	public void setDocument(Document doc){
+		super.setDocument(doc);
+		setTabSize(getTabSize());
 	}
 	/**
 	*カーソル行強調と[EOF]表示のために実装されます。
 	*/
 	protected void paintComponent(Graphics g){
 		Graphics2D g2 = (Graphics2D)g;
-		if(isLineCursorVisible()){
+		if(isLineCursorVisible){
 			Insets insets = getInsets();
 			int cy = caret.y+caret.height-1;
-			g2.setPaint(cursorcolor);
+			g2.setPaint(color);
 			g2.drawLine(insets.left,cy,getSize().width-insets.left-insets.right,cy);
 		}
 		super.paintComponent(g);
-		if(isEOFVisible()){
+		if(isEOFVisible){
 			try{
 				g2.setPaint(Color.BLACK);
 				Rectangle rect = modelToView(getDocument().getLength());
@@ -82,7 +91,7 @@ public class LeafTextPane extends JTextPane{
 			}catch(Exception ex){}
 		}
 	}
-	/**独自のキャレット*/
+	/**独自の太いキャレット*/
 	private class LeafCaret extends DefaultCaret{
 		public void paint(Graphics g){
 			if(isVisible()){
@@ -144,7 +153,51 @@ public class LeafTextPane extends JTextPane{
 		TabSet tabset = new TabSet(tabs);
 		SimpleAttributeSet attr = new SimpleAttributeSet();
 		StyleConstants.setTabSet(attr,tabset);
-		getStyledDocument().setParagraphAttributes(0,getDocument().getLength(),attr,false);
+		getStyledDocument().setParagraphAttributes(
+			0, getDocument().getLength(), attr, false
+		);
+	}
+	/**
+	*[EOF]の可視を設定します。
+	*@param visible [EOF]表示の場合true
+	*/
+	public void setEOFVisible(boolean visible){
+		isEOFVisible = visible;
+	}
+	/**
+	*[EOF]が可視かどうか返します。
+	*@return [EOF]表示の場合true
+	*/
+	public boolean isEOFVisible(){
+		return isEOFVisible;
+	}
+	/**
+	*行カーソルの可視を設定します。
+	*@param visible 行カーソル表示の場合true
+	*/
+	public void setLineCursorVisible(boolean visible){
+		isLineCursorVisible = visible;
+	}
+	/**
+	*行カーソルが可視かどうか返します。
+	*@return 行カーソル表示の場合true
+	*/
+	public boolean isLineCursorVisible(){
+		return isLineCursorVisible;
+	}
+	/**
+	*行カーソルの表示色を設定します。
+	*@param color 行カーソルの色
+	*/
+	public void setLineCursorColor(Color color){
+		color = color;
+	}
+	/**
+	*行カーソルの表示色を返します。
+	*@return 行カーソルの色
+	*/
+	public Color getLineCursorColor(){
+		return color;
 	}
 	/**
 	*このテキスト領域の末尾に文字列を追加します。
@@ -155,54 +208,98 @@ public class LeafTextPane extends JTextPane{
 		setCaretPosition(getText().length());
 	}
 	/**
-	*[EOF]の可視を設定します。
-	*@param visible [EOF]表示の場合true
+	*カーソル行の行頭の位置を返します。
+	*@return 行頭までの文字数
 	*/
-	public void setEOFVisible(boolean visible){
-		eofvisible = visible;
+	public int getLineStartOffset(){
+		Element root = getDocument().getDefaultRootElement();
+		return root.getElement(
+			root.getElementIndex(getCaretPosition())
+		).getStartOffset();
 	}
 	/**
-	*[EOF]が可視かどうか返します。
-	*@return [EOF]表示の場合true
+	*指定された行の行頭の位置を返します。
+	*@param line 0以上の行番号
+	*@return 行頭までの文字数
 	*/
-	public boolean isEOFVisible(){
-		return eofvisible;
+	public int getLineStartOffset(int line){
+		Element root = getDocument().getDefaultRootElement();
+		return root.getElement(line).getStartOffset();
 	}
 	/**
-	*行カーソルの可視を設定します。
-	*@param visible 行カーソル表示の場合true
+	*カーソル行の行末の位置を返します。
+	*@return 行末までの文字数
 	*/
-	public void setLineCursorVisible(boolean visible){
-		linecursorvisible = visible;
+	public int getLineEndOffset(){
+		Element root = getDocument().getDefaultRootElement();
+		return root.getElement(
+			root.getElementIndex(getCaretPosition())
+		).getEndOffset()-1;
 	}
 	/**
-	*行カーソルが可視かどうか返します。
-	*@return 行カーソル表示の場合true
+	*指定された行の行末の位置を返します。
+	*@param line 0以上の行番号
+	*@return 行末までの文字数
 	*/
-	public boolean isLineCursorVisible(){
-		return linecursorvisible;
+	public int getLineEndOffset(int line){
+		Element root = getDocument().getDefaultRootElement();
+		return root.getElement(line).getEndOffset()-1;
 	}
 	/**
-	*行カーソルの表示色を設定します。
-	*@param color 行カーソルの色
+	*カーソルのある行の番号を返します。
+	*@return 0以上の行番号
 	*/
-	public void setLineCursorColor(Color color){
-		cursorcolor = color;
+	public int getLineIndex(){
+		Element root = getDocument().getDefaultRootElement();
+		return root.getElementIndex(getCaretPosition());
 	}
 	/**
-	*行カーソルの表示色を返します。
-	*@return 行カーソルの色
+	*指定した行の行頭にカーソルを移動します。
+	*@param line 0以上の行番号
 	*/
-	public Color getLineCursorColor(){
-		return cursorcolor;
+	public void setLineIndex(int line){
+		Element root = getDocument().getDefaultRootElement();
+		setCaretPosition(root.getElement(line).getStartOffset());
 	}
-	/**改行コードの差を吸収するためにオーバーライドされます。*/
+	/**
+	*カーソル行を選択します。
+	*/
+	public void selectLine(){
+		Element root = getDocument().getDefaultRootElement();
+		Element elem = root.getElement(
+			root.getElementIndex(getCaretPosition())
+		);
+		select(elem.getStartOffset(), elem.getEndOffset());
+	}
+	/**
+	*指定した行を選択します。
+	*@param line 0以上の行番号
+	*/
+	public void selectLine(int line){
+		Element root = getDocument().getDefaultRootElement();
+		Element elem = root.getElement(line);
+		select(elem.getStartOffset(), elem.getEndOffset());
+	}
+	/**
+	*カーソル行を削除します。
+	*/
+	public void removeLine(){
+		selectLine();
+		replaceSelection("");
+	}
+	/**
+	*指定した行を削除します。
+	*@param line 0以上の行番号
+	*/
+	public void removeLine(int line){
+		selectLine(line);
+		replaceSelection("");
+	}
+	/**
+	*改行コードをLFに統一してテキストを返します。
+	*@return テキスト
+	*/
 	public String getText(){
-		return super.getText().replaceAll("\r\n","\n").replaceAll("\r","\n");
-	}
-	/**ドキュメントの変更時にタブサイズの変更を防止するためにオーバーライドされます。*/
-	public void setDocument(Document doc){
-		super.setDocument(doc);
-		setTabSize(getTabSize());
+		return super.getText().replaceAll("(\r\n|\r)","\n");
 	}
 }

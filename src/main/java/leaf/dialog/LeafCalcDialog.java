@@ -1,12 +1,12 @@
 /**************************************************************************************
 月白プロジェクト Java 拡張ライブラリ 開発コードネーム「Leaf」
 始動：2010年6月8日
-バージョン：Edition 1.0
+バージョン：Edition 1.1
 開発言語：Pure Java SE 6
-開発者：東大アマチュア無線クラブ2010年度新入生 川勝孝也
+開発者：東大アマチュア無線クラブ 川勝孝也
 ***************************************************************************************
-「Leaf」は「月白エディタ」1.2以降及び「Jazlog(ZLOG3.0)」用に開発されたライブラリです
-「LeafCalcDialog」は実装上「月白電卓(2009年3月12日)」の後継に当たります
+License Documents: See the license.txt (under the folder 'readme')
+Author: University of Tokyo Amateur Radio Club / License: GPL
 ***************************************************************************************
 flgdis:labelの表示値が何を示しているか / flgnum:numに値が入っているか
 total:計算の結果数値 / dis:表示値 / memo:メモリ / dnm:分母 / nmr:分子
@@ -20,11 +20,11 @@ import javax.swing.*;
 import leaf.manager.LeafLangManager;
 
 /**
-*四則演算・メモリー機能を持った汎用的な電卓ダイアログです。<br>
+*四則演算・メモリー機能を持った汎用的な電卓ダイアログです。
 *@author 東大アマチュア無線クラブ
 *@since Leaf 1.0 作成：2010年5月8日
 */
-public class LeafCalcDialog extends LeafDialog implements ActionListener{
+public final class LeafCalcDialog extends LeafDialog{
 	
 	/**秘匿フィールド*/
 	private final int width=80,height=25;
@@ -37,32 +37,43 @@ public class LeafCalcDialog extends LeafDialog implements ActionListener{
 	/**GUI*/
 	private final JLabel label;
 	private final JPanel panel;
-	private final LeafButton b0,b1,b2,b3,b4,b5,b6,b7,b8,b9,badd,bdif,bmul,bdiv,beql,bac,bcl,bce,bpm,bdot,bcm,brm,bmm,bmp,bsqrt;
+	private final LeafButton b0,b1,b2,b3,b4,b5,b6,b7,b8,b9,badd,bdif,bmul,bdiv,
+	beql,bac,bcl,bce,bpm,bdot,bcm,brm,bmm,bmp,bsqrt;
+	
+	private final ExInputListener listener;
 	
 	/**
 	*親フレームを指定して電卓ダイアログを生成します。
-	*@param parent 親フレーム
+	*@param owner 親フレーム
 	*/
-	public LeafCalcDialog(Frame parent){
+	public LeafCalcDialog(Frame owner){
 
-		super(parent,LeafLangManager.get("Calculator","電卓"),false);
-		this.setSize(408,210);
-		this.setResizable(false);
-		this.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-		Container cont = this.getContentPane();
+		super(owner,LeafLangManager.get("Calculator","電卓"),false);
+		getContentPane().setPreferredSize(new Dimension(5*width,7*height));
+		pack();
+		setResizable(false);
+		setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+		Container cont = getContentPane();
 		cont.setLayout(new BorderLayout());
+		
 		/*表示部*/
 		label = new JLabel("0.0",JLabel.RIGHT);
 		label.setPreferredSize(new Dimension(getWidth(),2*height));
 		label.setOpaque(true);
 		label.setBackground(Color.BLACK);
 		label.setForeground(Color.WHITE);
-		label.setFont(new Font(Font.MONOSPACED,Font.BOLD,30));
-		this.add(label,BorderLayout.NORTH);
+		label.setFont(new Font(Font.SERIF,Font.BOLD,30));
+		add(label,BorderLayout.NORTH);
+		
 		/*入力部*/
 		panel = new JPanel(new GridLayout(5,5));
-		panel.setBounds(0,2*height+5,5*width,5*height);
-		this.add(panel,BorderLayout.CENTER);
+		panel.setBounds(0,2*height,5*width,5*height);
+		add(panel,BorderLayout.CENTER);
+		
+		/*入力リスナー*/
+		listener = new ExInputListener();
+		addKeyListener(listener);
+		
 		/*ボタン1*/
 		bcm = new LeafButton("CM");
 		brm = new LeafButton("RM");
@@ -99,8 +110,9 @@ public class LeafCalcDialog extends LeafDialog implements ActionListener{
 		public LeafButton(String name){
 			super(name);
 			setFont(new Font(Font.MONOSPACED,Font.PLAIN,20));
-			LeafCalcDialog.this.panel.add(this);
-			addActionListener(LeafCalcDialog.this);
+			panel.add(this);
+			addActionListener(listener);
+			setFocusable(false);
 		}
 	}
 	/**
@@ -111,49 +123,75 @@ public class LeafCalcDialog extends LeafDialog implements ActionListener{
 		setTitle(LeafLangManager.get("Calculator","電卓"));
 	}
 	/**
-	*電卓画面を表示します。<br>
-	*他のLeafDialog拡張コンポーネントに倣ったメソッド名になっていますが、
-	*電卓ダイアログに限れば、{@link LeafDialog#setVisible(boolean) setVisible(boolean)}でも同様に動作します。
+	*電卓画面を表示します。
 	*/
 	public void showDialog(){
 		super.setVisible(true);
 	}
-	public void actionPerformed(ActionEvent e){
-		Object source = e.getSource();
-		     if(source==b0)input("0");
-		else if(source==b1)input("1");
-		else if(source==b2)input("2");
-		else if(source==b3)input("3");
-		else if(source==b4)input("4");
-		else if(source==b5)input("5");
-		else if(source==b6)input("6");
-		else if(source==b7)input("7");
-		else if(source==b8)input("8");
-		else if(source==b9)input("9");
-		else if(source==bdot)input(".");
-		else if(source==badd)calculate(op,ADD);
-		else if(source==bdif)calculate(op,DIF);
-		else if(source==bmul)calculate(op,MUL);
-		else if(source==bdiv)calculate(op,DIV);
-		else if(source==beql)equal();
-		else if(source==bac)clearAll();
-		else if(source==bcl)clear();
-		else if(source==bce)clearInput();
-		else if(source==bpm)alternate();
-		else if(source==bcm)clearMemory();
-		else if(source==brm)displayMemory();
-		else if(source==bmm)minusMemory();
-		else if(source==bmp)plusMemory();
-		else if(source==bsqrt)sqrt();
-		label.setText(String.valueOf(dis));
+	private class ExInputListener extends KeyAdapter implements ActionListener{
+		
+		public void actionPerformed(ActionEvent e){
+			Object source = e.getSource();
+			     if(source==b0)input("0");
+			else if(source==b1)input("1");
+			else if(source==b2)input("2");
+			else if(source==b3)input("3");
+			else if(source==b4)input("4");
+			else if(source==b5)input("5");
+			else if(source==b6)input("6");
+			else if(source==b7)input("7");
+			else if(source==b8)input("8");
+			else if(source==b9)input("9");
+			else if(source==bdot)input(".");
+			else if(source==badd)calculate(op,ADD);
+			else if(source==bdif)calculate(op,DIF);
+			else if(source==bmul)calculate(op,MUL);
+			else if(source==bdiv)calculate(op,DIV);
+			else if(source==beql)equal();
+			else if(source==bac)clearAll();
+			else if(source==bcl)clear();
+			else if(source==bce)clearInput();
+			else if(source==bpm)alternate();
+			else if(source==bcm)clearMemory();
+			else if(source==brm)displayMemory();
+			else if(source==bmm)minusMemory();
+			else if(source==bmp)plusMemory();
+			else if(source==bsqrt)sqrt();
+			label.setText(String.valueOf(dis));
+		}
+		public void keyPressed(KeyEvent e){
+			char ch  = e.getKeyChar();
+			int code = e.getKeyCode();
+			if(Character.isDigit(ch)||ch=='.')input(Character.toString(ch));
+			else if(ch=='+')calculate(op,ADD);
+			else if(ch=='-')calculate(op,DIF);
+			else if(ch=='*')calculate(op,MUL);
+			else if(ch=='/')calculate(op,DIV);
+			else if(code==e.VK_BACK_SPACE)backspace();
+			else if(code==e.VK_DELETE)clear();
+			else if(code==e.VK_ENTER)equal();
+			else if(code==e.VK_ESCAPE)dispose();
+			else if(ch=='p')pi();
+			else if(ch=='e')e();
+			label.setText(String.valueOf(dis));
+		}
 	}
 	/**数字の入力*/
 	private void input(String input){
-		if(!flgdis)num="0";
+		if(flgdis==DISPLAY_IS_RESULT)num="0";
 		if(input=="."&&num.indexOf(".")!=-1)return;
-		num+=input;
-		dis=Double.parseDouble(num);
+		num += input;
+		dis = Double.parseDouble(num);
 		flgdis=DISPLAY_IS_INPUT;
+	}
+	/**１文字削除*/
+	private void backspace(){
+		if(flgdis==DISPLAY_IS_INPUT&&num.length()>1){
+			num = num.substring(0,num.length()-1);
+			dis = Double.parseDouble(num);
+			flgnum = true;
+			flgdis = DISPLAY_IS_INPUT;
+		}
 	}
 	/**演算ボタン時*/
 	private void calculate(int op,int next){
@@ -209,22 +247,13 @@ public class LeafCalcDialog extends LeafDialog implements ActionListener{
 			dis=0;
 		}
 	}
-	/**→ボタン時*/
-	private void delete(){
-		String str = String.valueOf(dis);
-		str=str.substring(0,str.length()-1);
-		if(dis==Double.parseDouble(str))dis=(double)((int)(dis/10));
-		else dis=Double.parseDouble(str);
-		num = String.valueOf(dis);
-		flgnum = true;
-		flgdis = DISPLAY_IS_INPUT;
-	}
 	/**+/-ボタン時*/
 	private void alternate(){
 		dis=-dis;
-		if(flgdis)num=String.valueOf(dis);
-		else nmr=-nmr;
-		flgnum=true;
+		if(flgdis==DISPLAY_IS_INPUT){
+			num=String.valueOf(dis);
+			flgnum=true;
+		}else nmr=-nmr;
 	}
 	/**CMボタン時*/
 	private void clearMemory(){
@@ -251,5 +280,15 @@ public class LeafCalcDialog extends LeafDialog implements ActionListener{
 		flgdis=DISPLAY_IS_RESULT;
 		num=String.valueOf(dis=total);
 		flgnum=true;
+	}
+	/**円周率入力*/
+	private void pi(){
+		flgdis = DISPLAY_IS_RESULT;
+		input(String.valueOf(Math.PI));
+	}
+	/**自然対数の底入力*/
+	private void e(){
+		flgdis = DISPLAY_IS_RESULT;
+		input(String.valueOf(Math.E));
 	}
 }

@@ -1,11 +1,12 @@
 /**************************************************************************************
 月白プロジェクト Java 拡張ライブラリ 開発コードネーム「Leaf」
 始動：2010年6月8日
-バージョン：Edition 1.0
+バージョン：Edition 1.1
 開発言語：Pure Java SE 6
-開発者：東大アマチュア無線クラブ2010年度新入生 川勝孝也
+開発者：東大アマチュア無線クラブ 川勝孝也
 ***************************************************************************************
-「Leaf」は「月白エディタ」1.2以降及び「Jazlog(ZLOG3.0)」用に開発されたライブラリです
+License Documents: See the license.txt (under the folder 'readme')
+Author: University of Tokyo Amateur Radio Club / License: GPL
 **************************************************************************************/
 package leaf.manager;
 
@@ -13,7 +14,7 @@ import java.io.*;
 import java.util.*;
 
 /**
-*配列を表現する文字列とArrayListとの相互の変換を行うクラスです。
+*配列を表現する文字列と{@link ArrayList}との相互の変換を行うクラスです。
 *@author 東大アマチュア無線クラブ
 *@since Leaf 1.0 作成：2010年5月23日
 */
@@ -21,7 +22,7 @@ public class LeafArrayManager{
 	
 	/**
 	*文字列を区切り文字で分解して配列を得ます。
-	*変換される文字列は指定された区切り文字で配列を表し、配列にこの順番通りに格納されます。
+	*変換される文字列は指定された区切り文字で配列を表し、順番通りに格納されます。
 	*@param separator 区切り文字
 	*@param str 配列に置き換える文字列
 	*@return 文字列型配列を返します。引数の文字列がnullの場合、nullを返します。
@@ -33,7 +34,7 @@ public class LeafArrayManager{
 	}
 	/**
 	*文字列を区切り文字で分解してArrayListを得ます。
-	*変換される文字列は指定された区切り文字で配列を表し、ArrayListにこの順番通りに格納されます。
+	*変換される文字列は指定された区切り文字で配列を表し、順番通りに格納されます。
 	*@param separator 区切り文字
 	*@param str ArrayListに置き換える文字列
 	*@return 文字列型のArrayListを返します。引数の文字列がnullの場合、nullを返します。

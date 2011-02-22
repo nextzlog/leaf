@@ -1,11 +1,12 @@
 /**************************************************************************************
 月白プロジェクト Java 拡張ライブラリ 開発コードネーム「Leaf」
 始動：2010年6月8日
-バージョン：Edition 1.0
+バージョン：Edition 1.1
 開発言語：Pure Java SE 6
-開発者：東大アマチュア無線クラブ2010年度新入生 川勝孝也
+開発者：東大アマチュア無線クラブ 川勝孝也
 ***************************************************************************************
-「Leaf」は「月白エディタ」1.2以降及び「Jazlog(ZLOG3.0)」用に開発されたライブラリです
+License Documents: See the license.txt (under the folder 'readme')
+Author: University of Tokyo Amateur Radio Club / License: GPL
 **************************************************************************************/
 package leaf.components.net;
 
@@ -18,9 +19,10 @@ import leaf.net.client.*;
 
 /**
 *Leafのネットワーク通信機能で、サーバー上の全てのルームを表示するコンポーネントです。
-*<br>クライアント側で使用します。また、自動で一覧を更新する機能を持ちます。
+*クライアント側で使用します。また、自動で一覧を更新する機能を持ちます。
 *@author 東大アマチュア無線クラブ
 *@since Leaf 1.0 作成：2010年5月23日
+*@see LeafNetClient
 *@see LeafNetMemberPane
 */
 public class LeafNetRoomPane extends JPanel implements LeafNetListener{

@@ -1,11 +1,12 @@
 /**************************************************************************************
 月白プロジェクト Java 拡張ライブラリ 開発コードネーム「Leaf」
 始動：2010年6月8日
-バージョン：Edition 1.0
+バージョン：Edition 1.1
 開発言語：Pure Java SE 6
-開発者：東大アマチュア無線クラブ2010年度新入生 川勝孝也
+開発者：東大アマチュア無線クラブ 川勝孝也
 ***************************************************************************************
-「Leaf」は「月白エディタ」1.2以降及び「Jazlog(ZLOG3.0)」用に開発されたライブラリです
+License Documents: See the license.txt (under the folder 'readme')
+Author: University of Tokyo Amateur Radio Club / License: GPL
 **************************************************************************************/
 
 package leaf.media;
@@ -15,9 +16,7 @@ import javax.sound.sampled.*;
 import java.util.*;
 
 /**
-*Java Sound API を用いて簡単に音声ファイルを再生するクラスです。<br>
-*「再生」「一時停止」「停止」ができ、ループのON/OFFの設定と再生を<br>
-*別のメソッドに分けるなど、プレーヤとしてより自然な実装になっています。<br>
+*Java Sound API を用いて簡単に音声ファイルを再生するクラスです。
 *対応するファイル形式は、WAVE、AU、AIFF、SNDです。
 *@author 東大アマチュア無線クラブ
 *@since Leaf 1.0 作成：2009年3月12日
@@ -39,30 +38,30 @@ public class LeafAudioPlayer{
 	*指定された音声ファイルを再生するようにプレーヤを初期化します。
 	*@param file 再生するファイル
 	*/
-	public void init(File file) throws LineUnavailableException,IllegalArgumentException,IllegalStateException,SecurityException,IOException,UnsupportedAudioFileException{
-		try{
-			if(file!=null){
-				this.file = file;
-				stream = AudioSystem.getAudioInputStream(file);
-				format = stream.getFormat();
-				
-				datainfo = new DataLine.Info(Clip.class,format);
-				clip = (Clip)AudioSystem.getLine(datainfo);
-				clip.open(stream);
-			}
-		}catch(LineUnavailableException ex){
-			throw ex;
-		}catch(IllegalArgumentException ex){
-			throw ex;
-		}catch(IllegalStateException ex){
-			throw ex;
-		}catch(SecurityException ex){
-			throw ex;
-		}catch(IOException ex){
-			throw ex;
-		}catch(UnsupportedAudioFileException ex){
-			throw ex;
+	public void load(File file) throws LineUnavailableException,
+	IllegalArgumentException, IllegalStateException, SecurityException,
+	IOException,UnsupportedAudioFileException{
+		this.file = file;
+		close();
+		if(file!=null){
+			stream = AudioSystem.getAudioInputStream(file);
+			format = stream.getFormat();
+			
+			datainfo = new DataLine.Info(Clip.class,format);
+			clip = (Clip)AudioSystem.getLine(datainfo);
+			clip.open(stream);
 		}
+	}
+	/**
+	*ストリームを閉じリソースを解放します。
+	*/
+	public void close() throws IOException{
+		stop();
+		if(stream!=null)stream.close();
+		stream   = null;
+		format   = null;
+		clip     = null;
+		datainfo = null;
 	}
 	/**
 	*プレーヤに読み込まれたファイルを返します。
@@ -74,7 +73,7 @@ public class LeafAudioPlayer{
 	/**
 	*音声の再生を開始します。
 	*/
-	public void start(){
+	public synchronized void start(){
 		if(clip!=null){
 			if(looping)clip.loop(loopcount);
 			else clip.start();
@@ -83,7 +82,7 @@ public class LeafAudioPlayer{
 	/**
 	*音声の再生を一時停止します。
 	*/
-	public void pause(){
+	public synchronized void pause(){
 		if(clip!=null){
 			clip.stop();
 		}
@@ -91,7 +90,7 @@ public class LeafAudioPlayer{
 	/**
 	*音声の再生を停止し、フレーム位置をリセットします。
 	*/
-	public void stop(){
+	public synchronized void stop(){
 		if(clip!=null){
 			clip.stop();
 			clip.setFramePosition(0);
@@ -99,16 +98,16 @@ public class LeafAudioPlayer{
 	}
 	/**
 	*音声ファイルの長さをマイクロ秒で返します。<br>
-	*このメソッドの返り値は、クリップがnullの場合、-1になります。<br>
+	*クリップがnullの場合、0を返します。
 	*@return 音声の長さ
 	*/
 	public long getMicrosecondLength(){
 		if(clip!=null)return clip.getMicrosecondLength();
-		return -1;
+		return 0;
 	}
 	/**
 	*現在の再生位置をマイクロ秒で返します。<br>
-	*クリップがnullの場合０を返します。
+	*クリップがnullの場合0を返します。
 	*@return 現在の再生位置
 	*/
 	public long getMicrodecondPosition(){
@@ -117,16 +116,16 @@ public class LeafAudioPlayer{
 	}
 	/**
 	*音声ファイルのフレーム数を返します。<br>
-	*このメソッドの返り値は、クリップがnullの場合、-1になります。<br>
+	*クリップがnullの場合、0を返します。
 	*@return フレーム数
 	*/
 	public int getFrameLength(){
 		if(clip!=null)return clip.getFrameLength();
-		return -1;
+		return 0;
 	}
 	/**
 	*現在の再生位置をフレーム数で返します。<br>
-	*クリップがnullの場合、０を返します。
+	*クリップがnullの場合、0を返します。
 	*@return 現在の再生位置
 	*/
 	public int getFramePosition(){
@@ -180,7 +179,14 @@ public class LeafAudioPlayer{
 	*@param count ループする回数
 	*/
 	public void setLoopCount(int count){
-		this.loopcount = count;
+		loopcount = count;
+	}
+	/**
+	*ループ再生の繰り返し回数を返します。
+	*@return 繰り返し回数
+	*/
+	public int getLoopCount(){
+		return loopcount;
 	}
 	/**
 	*このプレーヤが再生中かどうか返します。
@@ -189,5 +195,22 @@ public class LeafAudioPlayer{
 	public boolean isPlaying(){
 		if(clip!=null)return clip.isRunning();
 		return false;
+	}
+	/**
+	*プレーヤの再生音量を設定します。
+	*@param vol 100段階での音量
+	*@throws IllegalArgumentException 入力された値が不正の場合
+	*/
+	public void setVolume(int vol){
+		FloatControl cont = (FloatControl)clip.getControl(FloatControl.Type.MASTER_GAIN);
+		cont.setValue((float)Math.log10(vol)/2);
+	}
+	/**
+	*プレーヤの再生音量を返します。
+	*@return 100段階での音量
+	*/
+	public int getVolume(){
+		FloatControl cont = (FloatControl)clip.getControl(FloatControl.Type.MASTER_GAIN);
+		return (int)Math.pow(10,(cont.getValue()*2));
 	}
 }

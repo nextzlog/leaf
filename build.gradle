@@ -3,6 +3,14 @@ apply plugin: 'java'
 def utf8 = 'UTF-8'
 def java = '8'
 
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	implementation 'net.java.dev.jna:jna:3.2.7'
+}
+
 compileJava {
 	options.encoding = utf8
 	sourceCompatibility = java
