@@ -33,6 +33,9 @@ public class LeafTextPane extends JTextPane{
 	private int tabsize = 8;
 	private boolean isEOFVisible = true, isLineCursorVisible = true;
 	
+	private boolean isOnIME = false, isInsertMode = true;
+	private FontMetrics metrics;
+	
 	/**
 	*テキスト領域を生成します。
 	*/
@@ -45,13 +48,14 @@ public class LeafTextPane extends JTextPane{
 	*@param doc デフォルトのドキュメント
 	*/
 	public LeafTextPane(StyledDocument doc){
-		super(doc);
+		super();
 		init();
+		setDocument(doc);
 	}
 	/**初期化*/
 	private void init(){
 		setOpaque(false);
-		setEditorKit(new LeafEditorKit());
+		setEditorKit(createDefaultEditorKit());
 		caret = new LeafCaret();
 		caret.setBlinkRate(getCaret().getBlinkRate());
 		setCaret(caret);
@@ -59,6 +63,8 @@ public class LeafTextPane extends JTextPane{
 		setSelectedTextColor(Color.WHITE);
 		setTabSize(tabsize);
 		setDragEnabled(true);
+		
+		addInputMethodListener(new ExInputMethodListener());
 	}
 	/**
 	*ドキュメントを設定します。
@@ -67,6 +73,13 @@ public class LeafTextPane extends JTextPane{
 	public void setDocument(Document doc){
 		super.setDocument(doc);
 		setTabSize(getTabSize());
+	}
+	/**
+	*デフォルトのエディタキットを生成します。
+	*@return LeafEditorKit
+	*/
+	public EditorKit createDefaultEditorKit(){
+		return new LeafEditorKit();
 	}
 	/**
 	*カーソル行強調と[EOF]表示のために実装されます。
@@ -82,11 +95,11 @@ public class LeafTextPane extends JTextPane{
 		super.paintComponent(g);
 		if(isEOFVisible){
 			try{
-				g2.setPaint(Color.BLACK);
+				g2.setPaint(getForeground());
 				Rectangle rect = modelToView(getDocument().getLength());
 				FontMetrics met = g2.getFontMetrics();
 				g2.fillRect(rect.x+2,rect.y,met.stringWidth("[EOF]")+1,met.getHeight());
-				g2.setPaint(Color.WHITE);
+				g2.setPaint(getBackground());
 				g2.drawString("[EOF]",rect.x+3,rect.y+met.getHeight()-2);
 			}catch(Exception ex){}
 		}
@@ -99,7 +112,13 @@ public class LeafTextPane extends JTextPane{
 					javax.swing.plaf.TextUI ui = getUI();
 					Rectangle r = ui.modelToView(LeafTextPane.this,getDot());
 					g.setColor(getCaretColor());
-					g.fillRect(r.x,r.y,2,r.height);
+					g.setXORMode(getBackground());
+					if(isInsertMode){
+						g.fillRect(r.x, r.y, 2, r.height);
+					}else{
+						int width = metrics.stringWidth(getText(getCaretPosition(),1))-1;
+						g.fillRect(r.x, r.y, (width<=0)? 2 : width, r.height);
+					}
 				}catch(Exception ex){}
 			}
 		}
@@ -158,6 +177,14 @@ public class LeafTextPane extends JTextPane{
 		);
 	}
 	/**
+	*フォントを設定します。
+	*@param font
+	*/
+	public void setFont(Font font){
+		super.setFont(font);
+		metrics = getFontMetrics(font);
+	}
+	/**
 	*[EOF]の可視を設定します。
 	*@param visible [EOF]表示の場合true
 	*/
@@ -190,7 +217,7 @@ public class LeafTextPane extends JTextPane{
 	*@param color 行カーソルの色
 	*/
 	public void setLineCursorColor(Color color){
-		color = color;
+		this.color = color;
 	}
 	/**
 	*行カーソルの表示色を返します。
@@ -301,5 +328,63 @@ public class LeafTextPane extends JTextPane{
 	*/
 	public String getText(){
 		return super.getText().replaceAll("(\r\n|\r)","\n");
+	}
+	/**
+	*選択部分を指定された文字列に置換します。
+	*@param text 置換後の文字列
+	*/
+	public void replaceSelection(String text){
+		if(!isInsertMode && !isOnIME){
+			int pos = getCaretPosition();
+			try{
+				if(getSelectedText()==null){
+					char ch = getText(pos, text.length()).charAt(0);
+					if(ch != '\n' && ch != '\r'){
+						moveCaretPosition(pos+text.length());
+					}
+				}
+			}catch(Exception ex){}
+		}
+		super.replaceSelection(text);
+	}
+	/**
+	*テキスト挿入/置換モードを設定します。
+	*@param mode 挿入モードの場合true
+	*/
+	public void setInsertMode(boolean mode){
+		isInsertMode = mode;
+	}
+	/**
+	*テキスト挿入/置換モードの設定を返します。
+	*@return 挿入モードの場合true
+	*/
+	public boolean isInsertMode(){
+		return isInsertMode;
+	}
+	/**
+	*IME動作中かどうかを監視します。
+	*/
+	private class ExInputMethodListener implements InputMethodListener{
+		public void inputMethodTextChanged(InputMethodEvent e){
+			AttributedCharacterIterator aci = e.getText();
+			try{
+				int count = e.getCommittedCharacterCount();
+				int lngth = aci.getEndIndex() - aci.getBeginIndex();
+				isOnIME = (count < lngth);
+			}catch(NullPointerException ex){
+				isOnIME = false;
+			}
+		}
+		public void caretPositionChanged(InputMethodEvent e){}
+	}
+	/**
+	*INSERTキーで挿入/上書きモードを切り替えます
+	*@param e キーイベント
+	*/
+	protected void processKeyEvent(KeyEvent e){
+		super.processKeyEvent(e);
+		if(e.getKeyCode() == KeyEvent.VK_INSERT && e.getID() == KeyEvent.KEY_RELEASED){
+			isInsertMode = !isInsertMode;
+		}
 	}
 }

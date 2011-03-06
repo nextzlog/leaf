@@ -11,13 +11,20 @@ Author: University of Tokyo Amateur Radio Club / License: GPL
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
+import java.io.FileReader;
+import java.util.ArrayList;
 
-import leaf.icon.*;
-import leaf.components.*;
-import leaf.components.taskpane.*;
-import leaf.components.text.*;
-import leaf.dialog.LeafConsoleDialog;
-import leaf.document.*;
+import leaf.components.LeafFrame;
+import leaf.components.shell.LeafShellPane;
+import leaf.components.tabbedpane.LeafTabbedPane;
+import leaf.components.taskpane.LeafExpandPane;
+import leaf.components.taskpane.LeafTaskPane;
+import leaf.components.text.LeafTextPane;
+import leaf.components.text.LeafTextScrollPane;
+import leaf.document.LeafStyledDocument;
+import leaf.document.KeywordSet;
+import leaf.icon.LeafIcons;
+import leaf.script.arice.AriceScriptEngine;
 
 /**
 *デモ用アプリケーション
@@ -26,70 +33,32 @@ import leaf.document.*;
 */
 
 public class Demo extends LeafFrame{
+	
+	private LeafTextPane textpane;
+	private String text = "public void leaf(){\n\t//AutoIndent.\n}";
+	
+	private String copyleft 
+	= "<html><center>Under the GPL (GNU General Public License)</center>"
+	+"<br>Copyright(C) 2010 by University of Tokyo Amateur Radio Club"
+	+"<center>See the 'license.txt' for the license details</center>";
+	
 	public static void main(String[] args){
-		setDefaultLookAndFeel();
-		new Demo().setVisible(true);
+		if(args.length > 0)runScript(args[0]);
+		else{
+			setDefaultLookAndFeel();
+			new Demo();
+		}
 	}
 	public Demo(){
 		super("Great Program World !!");
 		setSize(400,600);
 		setIconImage(new LeafIcons().getIcon("logo").getImage());
-		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		setDefaultCloseOperation(EXIT_ON_CLOSE);
 		
-		LeafTaskPane taskpane = new LeafTaskPane();
-		add(taskpane,BorderLayout.CENTER);
+		LeafTabbedPane tabpane = new LeafTabbedPane();
+		add(tabpane, BorderLayout.CENTER);
 		
-		LeafExpandPane panel1 = new LeafExpandPane("LeafTextPane + LeafTextScrollPane"){
-			public JComponent setContent(){
-				JPanel cont = new JPanel(new BorderLayout());
-				LeafTextPane textpane = new LeafTextPane();
-				textpane.setLineCursorVisible(true);
-				textpane.setEOFVisible(true);
-				textpane.setEditorKit(LeafStyledDocument.getEditorKit());
-				((LeafStyledDocument)textpane.getDocument()).setAutoIndentEnabled(true);
-				textpane.setText("Auto Indent.\n\t");
-				textpane.setFont(new Font(Font.MONOSPACED,Font.PLAIN,16));
-				LeafTextScrollPane scroll = new LeafTextScrollPane(textpane);
-				scroll.getViewport().setOpaque(true);
-				scroll.getViewport().setBackground(Color.WHITE);
-				cont.add(scroll);
-				return cont;
-			}
-		};
-		taskpane.addComp(panel1);
-		panel1.setExpanded(true);
-		
-		LeafExpandPane panel2 = new LeafExpandPane("JTextArea + LeafTextScrollPane"){
-			public JComponent setContent(){
-				JPanel cont = new JPanel(new BorderLayout());
-				JTextArea textarea = new JTextArea();
-				textarea.setFont(new Font(Font.MONOSPACED,Font.PLAIN,16));
-				LeafTextScrollPane scroll = new LeafTextScrollPane(textarea);
-				scroll.getViewport().setBackground(Color.WHITE);
-				cont.add(scroll);
-				return cont;
-			}
-		};
-		taskpane.addComp(panel2);
-		
-		LeafExpandPane panel3 = new LeafExpandPane("Welcome"){
-			public JComponent setContent(){
-				JPanel cont = new JPanel(new BorderLayout());
-				JLabel label = new JLabel(
-					"<html><center>Under the GPL (GNU General Public License)</center>"
-					+"<br>Copyright(C) 2010 by University of Tokyo Amateur Radio Club"
-					+"<center>See the 'license.txt' for the license details</center>",
-					new LeafIcons().getIcon("welcome"),
-					JLabel.CENTER
-				);
-				label.setHorizontalTextPosition(JLabel.CENTER);
-				label.setVerticalTextPosition(JLabel.BOTTOM);
-				cont.add(label);
-				return cont;
-			}
-		};
-		taskpane.addComp(panel3);
-		panel3.setExpanded(true);
+		tabpane.add("<html><b>LeafTabbedPane", createComponentDemo());
 		
 		final JButton button = new JButton("Full Screen");
 		button.addActionListener(new ActionListener(){
@@ -101,11 +70,79 @@ public class Demo extends LeafFrame{
 		});
 		add(button,BorderLayout.SOUTH);
 		
-		new LeafConsoleDialog(this).setSystemOutAndErr();
+		setVisible(true);
+		textpane.requestFocusInWindow();
 	}
 	private static void setDefaultLookAndFeel(){
 		try{
 			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 		}catch(Exception ex){}
+	}
+	/**
+	*AriCE実行環境
+	*/
+	private static void runScript(String src){
+		AriceScriptEngine engine = new AriceScriptEngine();
+		try{
+			System.out.println("===========EVALUATE==========");
+			final long start = System.nanoTime();
+			System.out.println("=>" + engine.eval(new FileReader(src)));
+			System.out.println("=>" + (System.nanoTime() - start) + "NS");
+			System.out.println(engine.disassemble());
+		}catch(Exception ex){
+			System.out.println("============ERROR============");
+			System.out.println(ex.getMessage());
+		}
+	}
+	/**
+	*コンポーネント関連のデモ
+	*/
+	private LeafTaskPane createComponentDemo(){
+		LeafTaskPane taskpane = new LeafTaskPane();
+		LeafExpandPane panel1 = new LeafExpandPane(
+			"LeafTextPane + LeafTextScrollPane + LeafStyledDocument"){
+			public JComponent setContent(){
+				JPanel border = new JPanel(new BorderLayout());
+				LeafStyledDocument doc = createStyledDocument();
+				textpane  = new LeafTextPane(doc);
+				doc.setAutoIndentEnabled(true);
+				textpane.setInsertMode(false);
+				textpane.setText(text);
+				textpane.setFont(new Font(Font.MONOSPACED,Font.PLAIN,16));
+				LeafTextScrollPane scroll = new LeafTextScrollPane(textpane);
+				scroll.getViewport().setOpaque(true);
+				scroll.getViewport().setBackground(Color.WHITE);
+				border.add(scroll, BorderLayout.CENTER);
+				return border;
+			}
+		};
+		taskpane.addComp(panel1);
+		panel1.setExpanded(true);
+		
+		LeafExpandPane panel2 = new LeafExpandPane("LeafTaskPane + LeafExpandPane"){
+			public JComponent setContent(){
+				JLabel label = new JLabel(
+					copyleft, new LeafIcons().getIcon("welcome"), JLabel.CENTER);
+				label.setHorizontalTextPosition(JLabel.CENTER);
+				label.setVerticalTextPosition(JLabel.BOTTOM);
+				return label;
+			}
+		};
+		taskpane.addComp(panel2);
+		panel2.setExpanded(true);
+		return taskpane;
+	}
+	/**
+	*ドキュメント
+	*/
+	private LeafStyledDocument createStyledDocument(){
+		LeafStyledDocument doc = new LeafStyledDocument();
+		KeywordSet set = new KeywordSet();
+		ArrayList<String> list = set.getKeywords();
+		list.add("public");
+		list.add("void");
+		set.setCommentLineStart("//");
+		doc.setKeywordSet(set);
+		return doc;
 	}
 }

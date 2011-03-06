@@ -72,7 +72,7 @@ public final class LeafAudioDialog extends LeafDialog{
 			}
 		});
 		init(file);
-		new ExThread().start();
+		new ExSwingWorker().execute();
 		chooser.addChoosableFileFilter(new FileNameExtensionFilter(
 			"AIFC/AIFF/AU/SND/WAV","aifc","aif","aiff","au","snd","wav"
 		));
@@ -94,7 +94,7 @@ public final class LeafAudioDialog extends LeafDialog{
 			}
 		});
 		init(file);
-		new ExThread().start();
+		new ExSwingWorker().execute();
 		chooser.addChoosableFileFilter(new FileNameExtensionFilter(
 			"AIFC/AIFF/AU/SND/WAV","aifc","aif","aiff","au","snd","wav"
 		));
@@ -173,27 +173,20 @@ public final class LeafAudioDialog extends LeafDialog{
 			chooser.setSelectedFile(file);
 		}
 	}
-	/**
-	*バックグラウンド処理
-	*/
-	private class ExThread extends Thread{
-		public void run(){
-			long position = 0;
-			try{
-				while(true){
-					position = player.getFramePosition();
-					progress.setValue((int)
-						(100* position / (player.getFrameLength()+1))%100
-					);
+	/**バックグラウンド処理*/
+	private class ExSwingWorker extends SwingWorker<String,String>{
+		public String doInBackground(){
+			long position, value;
+			while(true){
+				position  = player.getFramePosition();
+				value = (100 * position / (player.getFrameLength()+1)) %100;
+				progress.setValue((int)value);
+				try{
 					if(position >= player.getFrameLength()){
-						player.stop();
-						if(player.isLoopMode())player.start();
+						if(!player.isLoopMode()) player.stop();
 					}
-					Thread.sleep(500);
-				}
-			}catch(Exception ex){
-				ex.printStackTrace();
-				label.setText(ex.toString());
+					Thread.sleep(250);
+				}catch(Exception ex){}
 			}
 		}
 	}

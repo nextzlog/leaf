@@ -152,7 +152,7 @@ public final class LeafTypingOptionDialog extends LeafDialog{
 			}
 		});
 		
-		bcancel = new JButton(LeafLangManager.get("CANCEL","キャンセル"));
+		bcancel = new JButton(LeafLangManager.get("Cancel","キャンセル"));
 		bcancel.setBounds(230,100,100,20);
 		add(bcancel);
 		

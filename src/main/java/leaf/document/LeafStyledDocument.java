@@ -94,10 +94,10 @@ public class LeafStyledDocument extends DefaultStyledDocument{
 	*/
 	public void update(){
 		
-		StyleConstants.setForeground(normal,  Color.BLACK);
-		StyleConstants.setForeground(keyword, Color.BLUE );
-		StyleConstants.setForeground(quote,   Color.RED  );
-		StyleConstants.setForeground(comment, new Color(0,150,0));
+		StyleConstants.setForeground(normal,  LeafSyntaxManager.getColor("normal"));
+		StyleConstants.setForeground(keyword, LeafSyntaxManager.getColor("keyword"));
+		StyleConstants.setForeground(quote,   LeafSyntaxManager.getColor("quote"));
+		StyleConstants.setForeground(comment, LeafSyntaxManager.getColor("comment"));
 	}
 	/**
 	*キーワードセットを設定してから表示を更新します。

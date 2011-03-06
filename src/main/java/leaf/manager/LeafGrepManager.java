@@ -59,7 +59,7 @@ public class LeafGrepManager{
 		File[] files = new LeafFileManager().listFiles(dir,filter);
 		
 		if(files==null)return null;
-		for(int i=0;i<files.length;i++){
+		for(int i=0; i<files.length; i++){
 			try{
 				String path;
 				switch(format){
@@ -83,9 +83,15 @@ public class LeafGrepManager{
 			}
 		}
 		list.add(0,"\n");
-		list.add(0,LeafLangManager.get("Found","検出数") + " " + (list.size()-1) + "\n");
-		list.add(0,LeafLangManager.get("Root Folder","検索フォルダ") + " " + dir + "\n");
-		list.add(0,LeafLangManager.get("Pattern","検索条件") + " " + pattern + "\n");
+		list.add(0, LeafLangManager.translate(
+			"Found Lines : [arg]\n","検出行数 : [arg]\n",list.size()-1
+		));
+		list.add(0, LeafLangManager.translate(
+			"Root Folder : [arg]\n", "検索フォルダ : [arg]\n", dir
+		));
+		list.add(0, LeafLangManager.translate(
+			"Pattern : [arg]\n", "検索条件 : [arg]\n", pattern
+		));
 		
 		list.trimToSize();
 		return list.toArray(new String[0]);

@@ -10,9 +10,13 @@ Author: University of Tokyo Amateur Radio Club / License: GPL
 **************************************************************************************/
 package leaf.manager;
 
-import java.awt.*;
-import java.io.*;
-import java.util.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.io.IOException;
+import java.util.Properties;
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
 
 /**
 *言語セットを管理し、多言語化を実現するクラスです。
@@ -33,12 +37,12 @@ public class LeafLangManager{
 	/*秘匿フィールド*/
 	private static Properties prop = new Properties();
 	private static File file;
-	private static Locale locale = Locale.getDefault();
 	private static int lang = LANG_ENGLISH;
+	
+	private static final Pattern parg = Pattern.compile("[arg]", Pattern.LITERAL);
 	
 	/**
 	*使用する言語を設定します。
-	*言語を設定すると、以後{@link LeafLangManager#get(String,String) get(eng,jpn)}で得られる全ての文字列がその言語による表現となります。
 	*@param lang 言語を表すこのクラスの定数
 	*/
 	public static void setLanguage(int lang){
@@ -78,12 +82,33 @@ public class LeafLangManager{
 	}
 	/**
 	*英語と日本語に対し、使用言語に対応した訳文を返します。
-	*取得される訳文は、引数の英語表現をキーとしたプロパティによって得られます。
 	*@param eng 英語による表現
 	*@param jpn 日本語による表現
-	*@return 訳文
+	*@return 英文に対する訳文
 	*/
-	public static String get(String eng,String jpn){
+	public static String get(String eng, String jpn){
 		return (lang==LANG_ENGLISH)?eng:((lang==LANG_JAPANESE)?jpn:prop.getProperty(eng));
+	}
+	/**
+	*英語と日本語に対し、使用言語に対応した訳文を返します。
+	*取得される訳文は、引数の英語表現をキーとしたプロパティによって得られます。
+	*訳文には置換要素"[arg]"を埋め込むことができます。
+	*@param eng 英語による表現
+	*@param jpn 日本語による表現
+	*@param args 置換文字列
+	*@return 英文に対する訳文
+	*/
+	public static String translate(String eng, String jpn, Object... args){
+		Matcher m = parg.matcher(get(eng, jpn));
+		StringBuffer sb = new StringBuffer();
+		for(Object arg : args){
+			if(m.find()){
+				m.appendReplacement(sb, arg.toString());
+				continue;
+			}
+			break;
+		}
+		m.appendTail(sb);
+		return sb.toString();
 	}
 }

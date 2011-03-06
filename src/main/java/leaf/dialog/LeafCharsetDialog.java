@@ -13,6 +13,7 @@ total:計算の結果数値 / dis:表示値 / memo:メモリ / dnm:分母 / nmr:
 **************************************************************************************/
 package leaf.dialog;
 
+import java.awt.Color;
 import java.awt.Dialog;
 import java.awt.Dimension;
 import java.awt.Frame;
@@ -186,7 +187,9 @@ public final class LeafCharsetDialog extends LeafDialog{
 		getContentPane().removeAll();
 		
 		/*選択された文字コード*/
-		uselb = new JLabel(LeafLangManager.get("Selected Codes","選択された文字コード"));
+		uselb = new JLabel(
+			LeafLangManager.get("Selected Codes","選択された文字コード")
+		);
 		uselb.setBounds(5,10,160,20);
 		add(uselb);
 		
@@ -202,7 +205,9 @@ public final class LeafCharsetDialog extends LeafDialog{
 		add(scroll);
 		
 		/*使用する文字コード*/
-		usablelb = new JLabel(LeafLangManager.get("Usable Codes","使用できる文字コード"));
+		usablelb = new JLabel(
+			LeafLangManager.get("Usable Codes","使用できる文字コード")
+		);
 		usablelb.setBounds(255,10,160,20);
 		add(usablelb);
 		
@@ -264,7 +269,7 @@ public final class LeafCharsetDialog extends LeafDialog{
 		});
 		
 		/*キャンセル*/
-		bcancel = new JButton(LeafLangManager.get("CANCEL","キャンセル"));
+		bcancel = new JButton(LeafLangManager.get("Cancel","キャンセル"));
 		bcancel.setBounds(300,240,100,20);
 		add(bcancel);
 		

@@ -14,32 +14,44 @@ import java.awt.*;
 import java.util.Calendar;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.TimeZone;
 import javax.swing.*;
-import java.text.SimpleDateFormat;
 
 import leaf.dialog.LeafDialog;
 import leaf.manager.LeafLangManager;
 
 /**
 *短針・長針・秒針からなるアナログ時計の実装です。<br>
-*秒針はシステム時刻に合わせて自動で同期します。
 *
 *@author 東大アマチュア無線クラブ
 *@since Leaf 1.1 作成：2010年10月30日
 */
-public class LeafClockPane extends JComponent{
+public final class LeafClockPane extends JComponent{
 	
+	private Timer timer;
+	private TimeZone zone;
 	private Calendar date;
 	private final double rad = Math.PI / 180;
+	
+	private Color dark, bright;
 	
 	/**
 	*アナログ時計を生成します。
 	*/
 	public LeafClockPane(){
-		setBackground(Color.BLACK);
-		setForeground(Color.WHITE);
+		this(null);
+	}
+	/**
+	*タイムゾーンを指定してアナログ時計を生成します。
+	*@param zone タイムゾーン
+	*/
+	public LeafClockPane(TimeZone zone){
+		setBackground(dark   = Color.BLACK);
+		setForeground(bright = Color.WHITE);
 		setPreferredSize(new Dimension(120,120));
-		Timer timer = new Timer();
+		setMinimumSize(new Dimension(100,100));
+		this.zone = (zone != null)? zone : TimeZone.getDefault();
+		timer = new Timer();
 		timer.schedule(new ExTimer(),0,1000);
 	}
 	/**
@@ -69,6 +81,20 @@ public class LeafClockPane extends JComponent{
 		return dialog;
 	}
 	/**
+	*アナログ時計にタイムゾーンを設定します。
+	*@param zone タイムゾーン
+	*/
+	public void setTimeZone(TimeZone zone){
+		this.zone = zone;
+	}
+	/**
+	*アナログ時計のタイムゾーンを返します。
+	*@return タイムゾーン
+	*/
+	public TimeZone getTimeZone(){
+		return zone;
+	}
+	/**
 	*この時計を描画します。
 	*@param g グラフィックス
 	*/
@@ -81,7 +107,6 @@ public class LeafClockPane extends JComponent{
 			RenderingHints.VALUE_ANTIALIAS_ON
 		);
 		
-		date = Calendar.getInstance();
 		double h = date.get(date.HOUR);
 		double m = date.get(date.MINUTE);
 		double s = date.get(date.SECOND);
@@ -172,12 +197,58 @@ public class LeafClockPane extends JComponent{
 	private class ExTimer extends TimerTask{
 		public void run(){
 			if(isVisible()){
-				date = Calendar.getInstance();
-				try{
-					Thread.sleep(1000-date.get(date.MILLISECOND));
-				}catch(InterruptedException ex){}
+				date  = Calendar.getInstance(zone);
+				int h = date.get(Calendar.HOUR_OF_DAY);
+				setBackground((h<6 || h>=18)? dark : bright);
+				setForeground((h<6 || h>=18)? bright : dark);
 				repaint();
 			}
 		}
+	}
+	/**
+	*昼間前景色および夜間背景色を設定します。
+	*@param color 色
+	*/
+	public void setDarkColor(Color color){
+		dark = color;
+	}
+	/**
+	*夜間前景色および昼間背景色を設定します。
+	*@param color 色
+	*/
+	public void setBrightColor(Color color){
+		bright = color;
+	}
+	/**
+	*昼間前景色および夜間背景色を返します。
+	*@return 色
+	*/
+	public Color getDarkColor(){
+		return dark;
+	}
+	/**
+	*夜間前景色および昼間背景色を返します。
+	*@return 色
+	*/
+	public Color getBrightColor(){
+		return bright;
+	}
+	/**
+	*スレッドを生成して計時を再開します。
+	*/
+	public void restart(){
+		try{
+			timer = new Timer();
+			timer.schedule(new ExTimer(),0,1000);
+		}catch(NullPointerException ex){}
+	}
+	/**
+	*スレッドを破棄して時計を終了します。
+	*/
+	public void stop(){
+		try{
+			timer.cancel();
+			timer = null;
+		}catch(NullPointerException ex){}
 	}
 }

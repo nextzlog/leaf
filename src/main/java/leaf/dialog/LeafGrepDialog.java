@@ -217,21 +217,24 @@ public final class LeafGrepDialog extends LeafDialog{
 		
 		/*サブフォルダ検索*/
 		subch = new JCheckBox(LeafLangManager.get(
-			"Search In Subfolder","サブフォルダからも検索(F)"),true);
+			"Search In Subfolder","サブフォルダからも検索(F)"),true
+		);
 		subch.setBounds(5,94,200,20);
 		subch.setMnemonic(KeyEvent.VK_F);
 		add(subch);
 		
 		/*大文字と小文字を区別*/
 		casech = new JCheckBox(LeafLangManager.get(
-			"Case Sensitive","大文字と小文字を区別(C)"),true);
+			"Case Sensitive","大文字と小文字を区別(C)"),true
+		);
 		casech.setBounds(5,114,200,20);
 		casech.setMnemonic(KeyEvent.VK_C);
 		add(casech);
 		
 		/*正規表現有効*/
 		regch = new JCheckBox(LeafLangManager.get(
-			"Regex Search","正規表現検索(G)"),true);
+			"Regex Search","正規表現検索(G)"),true
+		);
 		regch.setBounds(210,94,120,20);
 		regch.setMnemonic(KeyEvent.VK_G);
 		add(regch);
@@ -244,7 +247,8 @@ public final class LeafGrepDialog extends LeafDialog{
 		
 		/*DOTALL*/
 		dotch = new JCheckBox(LeafLangManager.get(
-			"DOTALL MODE","DOTALL モード"));
+			"DOTALL MODE","DOTALL モード")
+		);
 		dotch.setBounds(210,114,120,20);
 		dotch.setMnemonic(KeyEvent.VK_D);
 		add(dotch);

@@ -87,11 +87,25 @@ public final class LeafReplaceDialog extends LeafDialog{
 		setVisible(true);
 	}
 	/**
+	*検索対象のテキストコンポーネントを設定します。
+	*@param component 検索操作対象のテキスト領域
+	*/
+	public void setTextComponent(JTextComponent component){
+		this.component = component;
+	}
+	/**
 	*現在の検索キーワードを返します。
 	*@return 最後に入力された検索文字列
 	*/
 	public String getSearchText(){
 		return matcher.pattern().pattern();
+	}
+	/**
+	*検索キーワードを設定します。
+	*@param text 検索文字列
+	*/
+	public void setSearchText(String text){
+		addItem(scomb,text);
 	}
 	/**
 	*置換ダイアログを初期化します。{@link LeafLangManager}による
@@ -137,7 +151,8 @@ public final class LeafReplaceDialog extends LeafDialog{
 		
 		/*クリップボードから貼り付け*/
 		clipch = new JCheckBox(LeafLangManager.get(
-			"Paste from Clipboard","クリップボードから貼り付け(P)"));
+			"Paste from Clipboard","クリップボードから貼り付け(P)")
+		);
 		clipch.setMnemonic(KeyEvent.VK_P);
 		clipch.setBounds(5,65,200,20);
 		add(clipch);
@@ -150,14 +165,16 @@ public final class LeafReplaceDialog extends LeafDialog{
 		
 		/*大文字と小文字を区別*/
 		casech = new JCheckBox(LeafLangManager.get(
-			"Case Sensitive","大文字と小文字を区別(C)"),true);
+			"Case Sensitive","大文字と小文字を区別(C)"),true
+		);
 		casech.setBounds(5,85,200,20);
 		casech.setMnemonic(KeyEvent.VK_C);
 		add(casech);
 		
 		/*正規表現*/
 		regch = new JCheckBox(LeafLangManager.get(
-			"Regex Search","正規表現検索(G)"),true);
+			"Regex Search","正規表現検索(G)"),true
+		);
 		regch.setBounds(5,105,200,20);
 		regch.setMnemonic(KeyEvent.VK_G);
 		add(regch);
@@ -171,7 +188,8 @@ public final class LeafReplaceDialog extends LeafDialog{
 		
 		/*DOTALL*/
 		dotch = new JCheckBox(LeafLangManager.get(
-			"DOTALL MODE","DOTALLモード"));
+			"DOTALL MODE","DOTALLモード"
+		));
 		dotch.setBounds(5,125,200,20);
 		dotch.setMnemonic(KeyEvent.VK_O);
 		add(dotch);
@@ -187,21 +205,24 @@ public final class LeafReplaceDialog extends LeafDialog{
 		ButtonGroup group = new ButtonGroup();
 		
 		textrb = new JRadioButton(
-			LeafLangManager.get("Selected(0)","選択文字列(0)"),true);
+			LeafLangManager.get("Selected(0)","選択文字列(0)"),true
+		);
 		textrb.setBounds(5,20,115,20);
 		textrb.setMnemonic(KeyEvent.VK_0);
 		panel.add(textrb);
 		group.add(textrb);
 		
 		startrb = new JRadioButton(
-			LeafLangManager.get("Start Point(1)","選択開始点(1)"));
+			LeafLangManager.get("Start Point(1)","選択開始点(1)")
+		);
 		startrb.setBounds(5,40,115,20);
 		startrb.setMnemonic(KeyEvent.VK_1);
 		panel.add(startrb);
 		group.add(startrb);
 		
 		endrb = new JRadioButton(
-			LeafLangManager.get("End Point(2)","選択終了点(2)"));
+			LeafLangManager.get("End Point(2)","選択終了点(2)")
+		);
 		endrb.setBounds(5,60,115,20);
 		endrb.setMnemonic(KeyEvent.VK_2);
 		panel.add(endrb);
@@ -300,8 +321,10 @@ public final class LeafReplaceDialog extends LeafDialog{
 		if(getText(scomb).length()==0)return;
 		addItem(scomb,getText(scomb));
 		if(!search(ward)){
-			showMessage(LeafLangManager.get("Not found.",
-				getOrientText(ward) +" \" "+ getText(scomb)+" \" が見つかりません。"
+			showMessage(LeafLangManager.translate(
+				"Not found \"[arg]\" [arg].",
+				"「[arg]」が[arg]見つかりません",
+				getText(scomb), getOrientText(ward)
 			));
 		}
 	}
@@ -309,9 +332,9 @@ public final class LeafReplaceDialog extends LeafDialog{
 	private String getOrientText(int ward){
 		switch(ward){
 			case SEARCH_UPWARD:
-				return LeafLangManager.get("Upward","前方に");
+				return LeafLangManager.get("upward","前方に");
 			case SEARCH_DOWNWARD:
-				return LeafLangManager.get("Downward","後方に");
+				return LeafLangManager.get("downward","後方に");
 			default:
 				return null;
 		}
@@ -319,6 +342,7 @@ public final class LeafReplaceDialog extends LeafDialog{
 	/**検索方向を指定して検索*/
 	private boolean search(int ward){
 		updatePattern(!regch.isSelected());
+		component.requestFocusInWindow();
 		try{
 			switch(ward){
 				case SEARCH_UPWARD:

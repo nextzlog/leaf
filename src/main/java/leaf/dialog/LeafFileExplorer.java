@@ -10,6 +10,7 @@ Author: University of Tokyo Amateur Radio Club / License: GPL
 **************************************************************************************/
 package leaf.dialog;
 
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Frame;
 import java.awt.event.*;
@@ -18,7 +19,7 @@ import java.io.FileFilter;
 import java.io.FilenameFilter;
 import java.util.ArrayList;
 import java.util.Date;
-import java.text.SimpleDateFormat;
+import java.text.DateFormat;
 import javax.swing.*;
 import javax.swing.event.*;
 import javax.swing.tree.*;
@@ -50,7 +51,7 @@ public final class LeafFileExplorer extends LeafDialog{
 	private final ArrayList<FileSelectionListener> listeners;
 	private FilenameFilter filter;
 	
-	private final SimpleDateFormat format;
+	private final DateFormat format;
 	private String lastmodtext;
 	
 	private File root, current;
@@ -85,7 +86,7 @@ public final class LeafFileExplorer extends LeafDialog{
 		
 		dirmodel = new DefaultTreeModel(new DirNode(current = this.root));
 		
-		format = new SimpleDateFormat("yyyy/MM/dd hh:mm:ss");
+		format = DateFormat.getDateTimeInstance();
 		
 		init();
 		

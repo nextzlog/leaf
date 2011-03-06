@@ -33,7 +33,7 @@ import leaf.manager.LeafLangManager;
 public final class LeafBorderOptionDialog extends LeafDialog{
 	
 	/**秘匿フィールド*/
-	private boolean change = CANCEL_OPTION;
+	private boolean isChanged = CANCEL_OPTION;
 	private File file;
 	private BufferedImage image,origin;
 	private Color bgc;
@@ -59,7 +59,7 @@ public final class LeafBorderOptionDialog extends LeafDialog{
 	*/
 	public LeafBorderOptionDialog(Frame owner,File file,Color bgc,float alpha){
 		
-		super(owner,LeafLangManager.get("Background Options","背景設定"),true);
+		super(owner, null, true);
 		getContentPane().setPreferredSize(new Dimension(350,300));
 		pack();
 		setResizable(false);
@@ -69,7 +69,7 @@ public final class LeafBorderOptionDialog extends LeafDialog{
 		
 		addWindowListener(new WindowAdapter(){
 			public void windowClosing(WindowEvent e){
-				change = CANCEL_OPTION;
+				isChanged = CANCEL_OPTION;
 			}
 		});
 		
@@ -101,13 +101,12 @@ public final class LeafBorderOptionDialog extends LeafDialog{
 		});
 		
 		/*枠線*/
-		borderpanel = new JPanel();
+		borderpanel = new JPanel(null);
 		borderpanel.setBorder(new TitledBorder(
 			new EtchedBorder(EtchedBorder.LOWERED),
 			LeafLangManager.get("Picture","背景画像")
 		));
 		borderpanel.setBounds(0,30,350,235);
-		borderpanel.setLayout(null);
 		add(borderpanel);
 		
 		/*パス表示フィールド*/
@@ -185,23 +184,22 @@ public final class LeafBorderOptionDialog extends LeafDialog{
 		
 		bok.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e){
-				change = OK_OPTION;
+				isChanged = OK_OPTION;
 				dispose();
 			}
 		});
 		
-		bcancel = new JButton(LeafLangManager.get("CANCEL","キャンセル"));
+		bcancel = new JButton(LeafLangManager.get("Cancel","キャンセル"));
 		bcancel.setBounds(240,275,100,20);
 		add(bcancel);
 		
 		bcancel.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e){
-				change = CANCEL_OPTION;
+				isChanged = CANCEL_OPTION;
 				dispose();
 			}
 		});
 		
-		/*初期設定*/
 		update();
 	}
 	/**トリミング*/
@@ -295,7 +293,7 @@ public final class LeafBorderOptionDialog extends LeafDialog{
 	*/
 	public boolean showDialog(){
 		super.setVisible(true);
-		return change;
+		return isChanged;
 	}
 	/**
 	*選択されたファイルを返します。「背景画像を使用しない」場合、nullが返されます。

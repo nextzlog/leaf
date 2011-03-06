@@ -11,6 +11,7 @@ Author: University of Tokyo Amateur Radio Club / License: GPL
 package leaf.script.arice;
 
 import java.util.ArrayList;
+import javax.script.Bindings;
 import javax.script.ScriptException;
 
 /**
@@ -18,222 +19,248 @@ import javax.script.ScriptException;
 *@author 東大アマチュア無線クラブ
 *@since Leaf 1.1 作成：2010年6月27日 搭載：2010年9月29日
 */
-public class AriceVirtualMachine{
+final class AriceVirtualMachine extends AriceCodesAndTokens{
 	
-	/**数値をスタックに積みます*/
-	public static final int OP_PUSH  = 0;
-	/**スタックの上2値を加算して削除後スタックに積みます*/
-	public static final int OP_ADD   = 1;
-	/**スタックの上2値を減算して削除後スタックに積みます*/
-	public static final int OP_SUB   = 2;
-	/**スタックの上2値を乗算して削除後スタックに積みます*/
-	public static final int OP_MUL   = 3;
-	/**スタックの上2値を除算して削除後スタックに積みます*/
-	public static final int OP_DIV   = 4;
-	/**スタックの上2値でMODを求め削除後スタックに積みます*/
-	public static final int OP_MOD   = 5;
-	/**スタックの上2値でAND演算して削除後スタックに積みます*/
-	public static final int OP_AND   = 6;
-	/**スタックの上2値でOR演算して削除後スタックに積みます*/
-	public static final int OP_OR    = 7;
-	/**スタックの上2値でXOR演算して削除後スタックに積みます*/
-	public static final int OP_XOR   = 8;
-	/**スタックの上1値の符号を反転します*/
-	public static final int OP_MIN   = 9;
-	/**スタックの上2値を==演算して削除後スタックに積みます*/
-	public static final int OP_EQU   = 10;
-	/**スタックの上2値を!=演算して削除後スタックに積みます*/
-	public static final int OP_NEQ   = 11;
-	/**スタックの上2値を> 演算して削除後スタックに積みます*/
-	public static final int OP_GRET  = 12;
-	/**スタックの上2値を>=演算して削除後スタックに積みます*/
-	public static final int OP_GREQ  = 13;
-	/**スタックの上2値を< 演算して削除後スタックに積みます*/
-	public static final int OP_LESS  = 14;
-	/**スタックの上2値を<=演算して削除後スタックに積みます*/
-	public static final int OP_LSEQ  = 15;
-	/**オペランドの指定する変数値をスタックに積み増す*/
-	public static final int OP_VAR   = 16;
-	/**スタックの上1値をオペランドの指定する変数に代入します*/
-	public static final int OP_ASSN  = 17;
-	/**オペランドの指定する場所にジャンプします*/
-	public static final int OP_GOTO  = 18;
-	/**スタックの上1値が0の場合オペランドの指定する場所に移動します*/
-	public static final int OP_GOTO_ZERO = 19;
-	/**プログラムカウンタの値をスタックに積んでオペランドの指定する場所にジャンプします*/
-	public static final int OP_GOTO_SUB  = 20;
-	/**スタックの指定する場所に移動します*/
-	public static final int OP_RETURN    = 21;
-	/**スタックの上1値の値を画面に出力します*/
-	public static final int OP_PRINT     = 22;
-	/**改行文字を画面に出力します*/
-	public static final int OP_PRINTLN   = 23;
-	/**仮想マシンの実行を停止します*/
-	public static final int OP_EXIT      = 24;
+	private Code[] codes, stack;
 	
-	private final ArrayList<Code> stack;
-	private final ArrayList<Code> vars;
-	private final Code[] codes;
+	private final int STACK_SIZE = AriceScriptEngine.STACK_SIZE;
+	private final int STEP_MAX   = AriceScriptEngine.STEP_MAX; 
 	
-	private int words;
+	private int words = 0, count = 0;
+	private int pc, sp, fp, regist;
+	private Code x, y;  //スタックの上２値(演算対象値)
+	
+	private final AriceCalcUnit unit;
 	
 	/**
-	*中間言語コードを指定して仮想マシンを生成します。
-	*@param codes 中間言語コード
+	*仮想マシンを生成します。
 	*/
-	public AriceVirtualMachine(Code[] codes){
-		stack = new ArrayList<Code>(100);
-		vars  = new ArrayList<Code>(10);
-		this.codes = codes;
-		words = (codes != null)? codes.length : 0;
+	public AriceVirtualMachine(){
+		stack = new Code[STACK_SIZE];
+		unit  = new AriceCalcUnit();
 	}
 	/**
-	*仮想マシンを実行します。
-	*@throws ScriptException 構文エラーがあった場合
+	*プログラムを実行します。
+	*@param codes  中間言語コード
+	*@param bind バインディング
+	*@return 実行結果の値
+	*@throws ScriptException 実行エラーがあった場合
 	*/
-	public void execute() throws ScriptException{
-		int pc = 0; //プログラムカウンタ
-		int sp = 0; //スタックポインタ
-		
-		while(pc<words){
+	public Object execute(Code[] codes, Bindings bind) throws ScriptException{
+		words = (this.codes = codes).length;
+		pc = sp = fp = 0;
+		while(pc < words && count < STEP_MAX){
+			count ++;
 			switch(codes[pc].toInteger()){
-			case OP_PUSH:
-				stack.add(sp++,codes[pc+1]);
+			case OP_LIT_PUSH:
+				push(codes[pc+1]);
 				pc += 2;
 				break;
+			case OP_BIT_LEFT:
+				x = pop();
+				y = pop();
+				push(unit.bitleft(y,x));
+				pc++;
+				break;
+			case OP_BIT_RIGHT:
+				x = pop();
+				y = pop();
+				push(unit.bitright(y,x));
+				pc++;
+				break;
+			case OP_DUP:
+				push(get(sp-1));
+				pc++;
+				break;
+			case OP_DEL:
+				delete(operand());
+				pc+=2;
+				break;
 			case OP_ADD:
-				stack.set(sp-2,
-					new Code(stack.get(sp-2).toInteger()
-						   + stack.get(sp-1).toInteger()));
-				sp--;
+				x = pop();
+				y = pop();
+				push(unit.add(y.getValue(), x.getValue()));
 				pc++;
 				break;
 			case OP_SUB:
-				stack.set(sp-2,
-					new Code(stack.get(sp-2).toInteger()
-						   - stack.get(sp-1).toInteger()));
-				sp--;
+				x = pop();
+				y = pop();
+				push(unit.sub(y.getValue(), x.getValue()));
 				pc++;
 				break;
 			case OP_MUL:
-				stack.set(sp-2,
-					new Code(stack.get(sp-2).toInteger()
-						   * stack.get(sp-1).toInteger()));
-				sp--;
+				x = pop();
+				y = pop();
+				push(unit.mul(y.getValue(), x.getValue()));
 				pc++;
 				break;
 			case OP_DIV:
-				stack.set(sp-2,
-					new Code(stack.get(sp-2).toInteger()
-						   / stack.get(sp-1).toInteger()));
-				sp--;
+				x = pop();
+				y = pop();
+				push(unit.div(y.getValue(), x.getValue()));
 				pc++;
 				break;
 			case OP_MOD:
-				stack.set(sp-2,
-					new Code(stack.get(sp-2).toInteger()
-						   % stack.get(sp-1).toInteger()));
-				sp--;
+				x = pop();
+				y = pop();
+				push(unit.mod(y.getValue(), x.getValue()));
+				pc++;
+				break;
+			case OP_POW:
+				x = pop();
+				y = pop();
+				push(unit.pow(y.getValue(), x.getValue()));
 				pc++;
 				break;
 			case OP_AND:
-				stack.set(sp-2,
-					new Code(((stack.get(sp-2).toInteger()==1)
-						&& (stack.get(sp-1).toInteger()==1))? 1 : 0));
-				sp--;
+				x = pop();
+				y = pop();
+				push(unit.and(y.getValue(), x.getValue()));
 				pc++;
 				break;
 			case OP_OR:
-				stack.set(sp-2,
-					new Code(((stack.get(sp-2).toInteger()==1)
-						|| (stack.get(sp-1).toInteger()==1))? 1 : 0));
-				sp--;
+				x = pop();
+				y = pop();
+				push(unit.or(y.getValue(), x.getValue()));
 				pc++;
 				break;
 			case OP_XOR:
-				stack.set(sp-2,
-					new Code(((stack.get(sp-2).toInteger()==1)
-						^ (stack.get(sp-1).toInteger()==1))? 1 : 0));
-				sp--;
+				x = pop();
+				y = pop();
+				push(unit.xor(y.getValue(), x.getValue()));
 				pc++;
 				break;
-			case OP_MIN:
-				stack.set(sp-1,
-					new Code(stack.get(sp-1).toInteger()*(-1)));
+			case OP_NOT:
+				push(unit.not(pop().getValue()));
+				pc++;
+				break;
+			case OP_SHORT_AND:
+				if(pop().isTrue()){
+					pc += 2;
+					push(true);
+				}else{
+					pc = operand();
+					push(false);
+				}
+				break;
+			case OP_SHORT_OR:
+				if(pop().isTrue()){
+					pc = operand();
+					push(true);
+				}else{
+					pc += 2;
+					push(false);
+				}
+				break;
+			case OP_REV:
+				push(unit.mul(pop().getValue(), -1));
 				pc++;
 				break;
 			case OP_EQU:
-				stack.set(sp-2,
-					new Code(stack.get(sp-2).toInteger()
-						  == stack.get(sp-1).toInteger()? 1 : 0));
-				sp--;
+				x = pop();
+				y = pop();
+				push(unit.equals(y, x));
 				pc++;
 				break;
 			case OP_NEQ:
-				stack.set(sp-2,
-					new Code(stack.get(sp-2).toInteger()
-						  != stack.get(sp-1).toInteger()? 1 : 0));
-				sp--;
+				x = pop();
+				y = pop();
+				push(unit.differs(y, x));
 				pc++;
 				break;
 			case OP_GRET:
-				stack.set(sp-2,
-					new Code(stack.get(sp-2).toInteger()
-						  >  stack.get(sp-1).toInteger()? 1 : 0));
-				sp--;
+				x = pop();
+				y = pop();
+				push(unit.isBigger(y, x));
 				pc++;
 				break;
 			case OP_GREQ:
-				stack.set(sp-2,
-					new Code(stack.get(sp-2).toInteger()
-						  >= stack.get(sp-1).toInteger()? 1 : 0));
-				sp--;
+				x = pop();
+				y = pop();
+				push(unit.isBiggerOrEqual(y, x));
 				pc++;
 				break;
 			case OP_LESS:
-				stack.set(sp-2,
-					new Code(stack.get(sp-2).toInteger()
-						  <  stack.get(sp-1).toInteger()? 1 : 0));
-				sp--;
+				x = pop();
+				y = pop();
+				push(unit.isLesser(y, x));
 				pc++;
 				break;
 			case OP_LSEQ:
-				stack.set(sp-2,
-					new Code(stack.get(sp-2).toInteger()
-						  <= stack.get(sp-1).toInteger()? 1 : 0));
-				sp--;
+				x = pop();
+				y = pop();
+				push(unit.isLesserOrEqual(y, x));
 				pc++;
 				break;
-			case OP_VAR:
-				stack.add(sp++,vars.get(codes[pc+1].toInteger()));
+			case OP_VAR_INCR:
+				x = get(fp + operand());
+				set(fp + operand(), unit.increment(x));
 				pc += 2;
 				break;
-			case OP_ASSN:
-				int index = codes[pc+1].toInteger();
-				if(index >= vars.size())vars.add(stack.get(sp-1));
-				else vars.set(codes[pc+1].toInteger(),stack.get(sp-1));
-				sp--;
+			case OP_VAR_DECR:
+				x = get(fp + operand());
+				set(fp + operand(), unit.decrement(x));
+				pc += 2;
+				break;
+			case OP_ARG_INCR:
+				x = get(fp - operand());
+				set(fp + operand(), unit.increment(x));
+				pc += 2;
+				break;
+			case OP_ARG_DECR:
+				x = get(fp - operand());
+				set(fp + operand(), unit.decrement(x));
+				pc += 2;
+				break;
+			case OP_VAR_ASSN:
+				set(fp+operand(), pop());
+				pc += 2;
+				break;
+			case OP_VAR_PUSH:
+				push(get(fp+operand()));
+				pc += 2;
+				break;
+			case OP_ARG_ASSN:
+				set((fp-3)-operand(), pop());
+				pc += 2;
+				break;
+			case OP_ARG_PUSH:
+				push(get((fp-3)-operand()));
+				pc += 2;
+				break;
+			case OP_TO_LIST:
+				push(toList(operand()));
 				pc += 2;
 				break;
 			case OP_GOTO:
-				pc = codes[pc+1].toInteger();
+				pc = operand();
 				break;
-			case OP_GOTO_ZERO:
-				pc = (stack.get(sp-1).toInteger()==0)?
-				codes[pc+1].toInteger() : pc + 2;
-				sp--;
+			case OP_GOTO_FALSE:
+				pc = (pop().isTrue())? pc + 2 : operand();
 				break;
-			case OP_GOTO_SUB:
-				stack.add(sp++,new Code(pc+2));
-				pc = codes[pc+1].toInteger();
+			case OP_CALL:
+				push(pc+2);
+				pc = operand();
+				break;
+			case OP_FRAME:
+				push(fp);
+				fp  = sp;
+				sp += operand();
+				pc += 2;
 				break;
 			case OP_RETURN:
-				pc = stack.get(sp-1).toInteger();
-				sp--;
+				x  = pop();
+				sp = fp;
+				fp = pop().toInteger();
+				pc = pop().toInteger();
+				break;
+			case OP_CALL_DEL:
+				delete(operand());
+				push(x);
+				pc += 2;
 				break;
 			case OP_PRINT:
-				System.out.print(stack.get(sp-1));
-				sp--;
+				System.out.print(pop());
 				pc++;
 				break;
 			case OP_PRINTLN:
@@ -241,9 +268,197 @@ public class AriceVirtualMachine{
 				pc++;
 				break;
 			case OP_EXIT:
-				return;
+				return pop().getValue();
+			case OP_BIND_SET:
+				x = pop();
+				y = pop();
+				bind.put(y.toString(), x.getValue());
+				pc++;
+				break;
+			case OP_BIND_GET:
+				push(new Code(bind.get(pop().toString())));
+				pc++;
+				break;
+			case OP_INSTANCE:
+				x = operand(0);
+				y = operand(1);
+				push(getInstance(x, y.toInteger()));
+				pc += 3;
+				break;
+			case OP_METHOD:
+				x = operand(0);
+				y = operand(1);
+				push(invoke(x, y.toInteger()));
+				pc += 3;
+				break;
+			case OP_FIELD_ASSN:
+				push(setField(operand(0)));
+				pc += 2;
+				break;
+			case OP_FIELD_PUSH:
+				push(getField(operand(0)));
+				pc += 2;
+				break;
+			case OP_CLASS_CAST:
+				push(cast(operand(0)));
+				pc += 2;
+				break;
+			default:
+				System.out.println("Fatal Error at AriCE VM : " + codes[pc]);
+				return null;
 			}
 		}
-		
+		return get(0);
+	}
+	/**
+	*スタックの先頭から値を取り出して削除します。
+	*@return 取り出した値
+	*/
+	private Code pop(){
+		Code ret = stack[sp-1];
+		stack[(sp--)-1] = null;
+		return ret;
+	}
+	/**
+	*スタック上の指定した位置から値を取り出します。
+	*@param i 取り出す位置
+	*@return 取り出した値
+	*/
+	private Code get(int i){
+		return stack[i];
+	}
+	/**
+	*スタックの先頭に値を積みます。
+	*@param code 積む値
+	*/
+	private void push(Code code) throws ScriptException{
+		try{
+			stack[sp++] = code;
+		}catch(ArrayIndexOutOfBoundsException ex){
+			throw error("Stack Level Too Deep : " + sp);
+		}
+	}
+	/**
+	*スタックの先頭に真偽値を積みます。
+	*@param bool 真偽値
+	*/
+	private void push(boolean bool) throws ScriptException{
+		try{
+			stack[sp++] = new Code(bool);
+		}catch(ArrayIndexOutOfBoundsException ex){
+			throw error("Stack Level Too Deep : " + sp);
+		}
+	}
+	/**
+	*スタックの先頭に整数値を積みます。
+	*@param intg 整数値
+	*/
+	private void push(int intg) throws ScriptException{
+		try{
+			stack[sp++] = new Code(intg);
+		}catch(ArrayIndexOutOfBoundsException ex){
+			throw error("Stack Level Too Deep : " + sp);
+		}
+	}
+	/**
+	*スタックの指定したインデックスに値を設定します。
+	*@param index 位置
+	*@param code 値
+	*/
+	private void set(int index, Code code){
+		stack[index] = code;
+	}
+	/**
+	*スタックの先頭から指定された個数の値を削除します。
+	*@param num 個数
+	*/
+	private void delete(int num){
+		for(int i=0;i<num;i++){
+			stack[--sp] = null;
+		}
+	}
+	/**
+	*命令の第一オペランドを返します。
+	*@return オペランドの示す値
+	*/
+	private int operand() throws ScriptException{
+		return codes[pc+1].toInteger();
+	}
+	/**
+	*命令のオペランドを返します。
+	*@param num オペランドの番号
+	*@return オペランドコード
+	*/
+	private Code operand(int num){
+		return codes[pc+1+num];
+	}
+	/**
+	*スタックの先頭から指定された個数の値をリストに纏めます。
+	*@param num 個数
+	*@return リストコード
+	*/
+	private Code toList(int num){
+		ArrayList<Object> list = new ArrayList<Object>(num);
+		for(int i=num;i>0;i--){
+			list.add(stack[sp-i].getValue());
+		}
+		sp -= num;
+		return new Code(list);
+	}
+	/**
+	*指定した名前のクラスのインスタンスを生成します。
+	*@param name クラス名
+	*@param pars 引数の個数
+	*@return 生成したインスタンスを格納したコード
+	*/
+	private Code getInstance(Code name, int pars) throws ScriptException{
+		Code[] args = new Code[pars];
+		for(int i=pars-1;i>=0;i--){
+			args[i] = pop();
+		}
+		return unit.getInstanceCode(name, args);
+	}
+	/**
+	*スタックの先頭について、指定したメソッドを実行します。
+	*@param name メソッド名
+	*@param pars 引数の個数
+	*@return メソッドの戻り値
+	*/
+	private Code invoke(Code name, int pars) throws ScriptException{
+		Code[] args = new Code[pars];
+		for(int i=pars-1;i>=0;i--){
+			args[i] = pop();
+		}
+		return unit.invokeMethod(pop(), name, args);
+	}
+	/**
+	*スタックの先頭について、指定したフィールドの値を返します。
+	*@param name フィールド名
+	*@return フィールドの値
+	*/
+	private Code getField(Code name) throws ScriptException{
+		return unit.getField(pop(), name);
+	}
+	/**
+	*スタックの先頭について、指定したフィールドに値を設定します。
+	*@param name  フィールド名
+	*@return フィールドの値
+	*/
+	private Code setField(Code name) throws ScriptException{
+		Code value = pop(), obj = pop();
+		unit.setField(obj, name, value);
+		return value;
+	}
+	/**
+	*スタックの先頭について、指定した型に変換します。
+	*@param cast 型
+	*@return 型変換したコード
+	*/
+	private Code cast(Code cast) throws ScriptException{
+		return unit.cast(pop(), cast);
+	}
+	/**例外を生成します*/
+	private ScriptException error(Object msg){
+		return new ScriptException(msg.toString());
 	}
 }

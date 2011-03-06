@@ -33,7 +33,7 @@ import leaf.manager.LeafLangManager;
 public final class LeafCursorOptionDialog extends LeafDialog{
 	
 	/**秘匿フィールド*/
-	private boolean change = CANCEL_OPTION;
+	private boolean isChanged = CANCEL_OPTION;
 	private File file;
 	private BufferedImage image,origin;
 	private Rectangle trim,rect;
@@ -61,7 +61,7 @@ public final class LeafCursorOptionDialog extends LeafDialog{
 	*/
 	public LeafCursorOptionDialog(Frame owner,File file){
 		
-		super(owner,null,true);
+		super(owner, null, true);
 		getContentPane().setPreferredSize(new Dimension(350,300));
 		pack();
 		setResizable(false);
@@ -70,7 +70,7 @@ public final class LeafCursorOptionDialog extends LeafDialog{
 		
 		addWindowListener(new WindowAdapter(){
 			public void windowClosing(WindowEvent e){
-				change = CANCEL_OPTION;
+				isChanged = CANCEL_OPTION;
 			}
 		});
 		
@@ -101,13 +101,12 @@ public final class LeafCursorOptionDialog extends LeafDialog{
 		});
 		
 		/*枠線*/
-		borderpanel = new JPanel();
+		borderpanel = new JPanel(null);
 		borderpanel.setBorder(new TitledBorder(
 			new EtchedBorder(EtchedBorder.LOWERED),
 			LeafLangManager.get("Picture","カーソル画像")
 		));
 		borderpanel.setBounds(0,30,350,235);
-		borderpanel.setLayout(null);
 		add(borderpanel);
 		
 		/*パス表示フィールド*/
@@ -156,18 +155,18 @@ public final class LeafCursorOptionDialog extends LeafDialog{
 		
 		bok.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e){
-				change = OK_OPTION;
+				isChanged = OK_OPTION;
 				dispose();
 			}
 		});
 		
-		bcancel = new JButton(LeafLangManager.get("CANCEL","キャンセル"));
+		bcancel = new JButton(LeafLangManager.get("Cancel","キャンセル"));
 		bcancel.setBounds(240,275,100,20);
 		add(bcancel);
 		
 		bcancel.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e){
-				change = CANCEL_OPTION;
+				isChanged = CANCEL_OPTION;
 				dispose();
 			}
 		});
@@ -271,7 +270,7 @@ public final class LeafCursorOptionDialog extends LeafDialog{
 	*/
 	public boolean showDialog(){
 		super.setVisible(true);
-		return change;
+		return isChanged;
 	}
 	/**
 	*選択されたファイルを返します。「画像を使用しない」場合、nullが返されます。

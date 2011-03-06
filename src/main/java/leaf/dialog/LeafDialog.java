@@ -69,10 +69,12 @@ public class LeafDialog extends JDialog{
 	*@param visible 表示する場合はtrue
 	*/
 	public void setVisible(boolean visible){
-		if(!isVisible()&&visible)this.setLocation(
-			owner.getX()+(owner.getWidth()-getWidth())/2,
-			owner.getY()+(owner.getHeight()-getHeight())/2
-		);
+		if(!isVisible() && visible && owner != null){
+			setLocation(
+				owner.getX()+(owner.getWidth() -getWidth() )/2,
+				owner.getY()+(owner.getHeight()-getHeight())/2
+			);
+		}
 		super.setVisible(visible);
 	}
 	/**

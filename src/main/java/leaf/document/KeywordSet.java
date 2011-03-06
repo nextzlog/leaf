@@ -43,7 +43,6 @@ public class KeywordSet{
 	public KeywordSet(String name){
 		this.name = name;
 	}
-	
 	/**
 	*セットの名前を返します。
 	*/

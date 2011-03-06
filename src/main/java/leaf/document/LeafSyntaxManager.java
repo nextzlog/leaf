@@ -10,14 +10,17 @@ Author: University of Tokyo Amateur Radio Club / License: GPL
 **************************************************************************************/
 package leaf.document;
 
+import java.awt.Color;
 import java.awt.Frame;
 import java.io.*;
 import java.beans.XMLEncoder;
 import java.beans.XMLDecoder;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
 
 /**
-*キーワード強調設定を管理するためのマネージャークラスです。
+*キーワード強調設定を管理するためのマネージャークラスです。<br>
+*
 *@author 東大アマチュア無線クラブ
 *@since Leaf1.1 作成：2010年9月15日
 *@see KeywordSet
@@ -27,6 +30,14 @@ import java.util.*;
 public class LeafSyntaxManager{
 	
 	private ArrayList<KeywordSet> keywordsets = null;
+	private static HashMap<String, Color> colors = new HashMap<String, Color>(5);
+	
+	static{
+		colors.put("normal",  Color.BLACK);
+		colors.put("keyword", Color.BLUE);
+		colors.put("quote",   Color.RED);
+		colors.put("comment", new Color(0,150,0));
+	}
 	
 	/**
 	*指定された設定ファイルからキーワード強調設定を取り込みます。
@@ -166,5 +177,34 @@ public class LeafSyntaxManager{
 	public boolean showOptionDialog(Frame parent){
 		LeafSyntaxOptionDialog dialog = new LeafSyntaxOptionDialog(parent,this);
 		return (dialog.showDialog()==dialog.OK_OPTION);
+	}
+	/**
+	*指定された属性に対応する表示色を返します。
+	*@param key 属性の名前
+	*/
+	public static Color getColor(String key){
+		return colors.get(key);
+	}
+	/**
+	*指定された属性に対応する表示色を設定します。
+	*@param key 属性の名前
+	*@param color 表示色
+	*/
+	public static void putColor(String key, Color color){
+		colors.put(key, color);
+	}
+	/**
+	*配色を並べたハッシュマップを返します。
+	*@return ハッシュマップ
+	*/
+	protected static HashMap<String, Color> getColorMap(){
+		return colors;
+	}
+	/**
+	*配色を並べたハッシュマップを設定します。
+	*@param map ハッシュマップ
+	*/
+	protected static void setColorMap(HashMap<String, Color> map){
+		colors = map;
 	}
 }

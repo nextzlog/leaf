@@ -47,6 +47,8 @@ public class LeafFileChooser extends JFileChooser{
 		setFileHidingEnabled(true);
 		setDragEnabled(true);
 		
+		searchAndClickDetailButton();
+		
 		/*プレビュー*/
 		label1 = new JLabel(LeafLangManager.get("Image","画像"),JLabel.CENTER);
 		label1.setPreferredSize(new Dimension(200,20));
@@ -54,8 +56,9 @@ public class LeafFileChooser extends JFileChooser{
 		scroll = new JScrollPane(label2);
 		
 		/*文字コード指定*/
-		label3 = new JLabel(LeafLangManager.get(
-			"Character Code","文字コード："),JLabel.CENTER);
+		label3 = new JLabel(
+			LeafLangManager.get("Character Code","文字コード："), JLabel.CENTER
+		);
 		comb   = new JComboBox(LeafCharsetManager.getCharsetNames());
 		comb.setEditable(false);
 		
@@ -95,6 +98,7 @@ public class LeafFileChooser extends JFileChooser{
 	/**ダイアログのリサイズを制限する目的でオーバーライドされます。*/
 	protected JDialog createDialog(Component parent) throws HeadlessException{
 		JDialog dialog = super.createDialog(parent);
+		dialog.pack();
 		dialog.setResizable(false);
 		return dialog;
 	}
@@ -104,5 +108,27 @@ public class LeafFileChooser extends JFileChooser{
 	*/
 	public String getSelectedEncoding(){
 		return ((String)comb.getSelectedItem());
+	}
+	/**
+	*詳細ボタンを自動でクリックします。
+	*/
+	private void searchAndClickDetailButton(){
+		searchAndClickButton(this, UIManager.getIcon("FileChooser.detailsViewIcon"));
+	}
+	/**
+	*アイコンを指定してボタンを検索し、自動でクリックします。
+	*@param parent 検索元コンテナ
+	*@param icon ボタンのアイコン
+	*/
+	private boolean searchAndClickButton(Container parent, Icon icon){
+		for(Component comp : parent.getComponents()){
+			if(comp instanceof JToggleButton && ((JToggleButton)comp).getIcon() == icon){
+				((AbstractButton)comp).doClick();
+				return true;
+			}else{
+				if(searchAndClickButton((Container)comp, icon)) return true;
+			}
+		}
+		return false;
 	}
 }

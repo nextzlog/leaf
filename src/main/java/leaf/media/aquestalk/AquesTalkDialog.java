@@ -280,7 +280,7 @@ public final class AquesTalkDialog extends LeafDialog{
 	*@throws IOException ファイルのロードに失敗した場合
 	*/
 	public void setPhontFile(File file) throws IOException {
-		if(file!=null&&file.exists()){
+		if(file!=null&&file.isFile()){
 			file = file.getAbsoluteFile();
 			if(file.equals(this.file)) return;
 			phontfld.setText(file.getName());

@@ -38,7 +38,7 @@ public final class LeafFontDialog extends LeafDialog
 		"18","20","22","24","26","28","36","48","72"
 	};
 	private GraphicsEnvironment ge;
-	private boolean change = CANCEL_OPTION;
+	private boolean isChanged = CANCEL_OPTION;
 
 	/**GUI*/
 	private JLabel namelabel,stlabel,sizelabel,sample;
@@ -46,7 +46,6 @@ public final class LeafFontDialog extends LeafDialog
 	private JScrollPane namesc,stsc,sizesc;
 	private LeafTextField namef,stf,sizef,exp;
 	private JButton bok,bcancel;
-	private JPanel sampanel;
 	
 	/**
 	*親フレームを指定してフォント選択ダイアログを生成します。
@@ -60,7 +59,7 @@ public final class LeafFontDialog extends LeafDialog
 		setResizable(false);
 		addWindowListener(new WindowAdapter(){
 			public void windowClosing(WindowEvent e){
-				change = CANCEL_OPTION;
+				isChanged = CANCEL_OPTION;
 				dispose();
 			}
 		});
@@ -80,7 +79,7 @@ public final class LeafFontDialog extends LeafDialog
 		setResizable(false);
 		addWindowListener(new WindowAdapter(){
 			public void windowClosing(WindowEvent e){
-				change = CANCEL_OPTION;
+				isChanged = CANCEL_OPTION;
 				dispose();
 			}
 		});
@@ -108,18 +107,18 @@ public final class LeafFontDialog extends LeafDialog
 		getContentPane().removeAll();
 		
 		//サンプル
-		sampanel = new JPanel();
-		sampanel.setBounds(10,180,380,60);
 		sample = new JLabel(
-			"<html><Font size=5>" + LeafLangManager.get("Aa Bb Cc","Aa あぁ アァ 亜宇")
+			"<html><Font size=5>" + LeafLangManager.get("Aa Bb Cc","Aa あぁ アァ 亜宇"),
+			JLabel.CENTER
 		);
-		sampanel.add(sample);
+		sample.setBounds(10,180,380,60);
+		add(sample);
 		
-		sampanel.setBorder(new TitledBorder(
+		sample.setBorder(new TitledBorder(
 			new EtchedBorder(EtchedBorder.LOWERED),
 			LeafLangManager.get("Sample","サンプル")
 		));
-		add(sampanel);
+		add(sample);
 		
 		//フォント名
 		namelabel = new JLabel(LeafLangManager.get("Name","フォント名"));
@@ -177,7 +176,7 @@ public final class LeafFontDialog extends LeafDialog
 		bok.setBounds(400,25,100,22);
 		bok.addActionListener(this);
 		add(bok);
-		bcancel = new JButton(LeafLangManager.get("CANCEL","キャンセル"));
+		bcancel = new JButton(LeafLangManager.get("Cancel","キャンセル"));
 		bcancel.setBounds(400,49,100,22);
 		bcancel.addActionListener(this);
 		add(bcancel);
@@ -216,8 +215,8 @@ public final class LeafFontDialog extends LeafDialog
 	}
 	public void actionPerformed(ActionEvent e){
 		Object obj = e.getSource();
-		if(obj == bok)change = OK_OPTION;
-		else change = CANCEL_OPTION;
+		if(obj == bok)isChanged = OK_OPTION;
+		else isChanged = CANCEL_OPTION;
 		dispose();
 	}
 	public void changedUpdate(DocumentEvent e){}
@@ -264,7 +263,7 @@ public final class LeafFontDialog extends LeafDialog
 		sizef.setText(""+font.getSize());
 		sizelist.setSelectedValue(String.valueOf(font.getSize()),true);
 		super.setVisible(true);
-		if(change==OK_OPTION)return this.font;
+		if(isChanged==OK_OPTION)return this.font;
 		else return font;//そのまま返す
 	}
 }

@@ -12,9 +12,12 @@ package leaf.components.text;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeEvent;
+import java.util.ArrayList;
 import javax.swing.*;
-import javax.swing.text.*;
 import javax.swing.event.*;
+import javax.swing.text.*;
 
 /**
 *行番号と桁ルーラを表示するテキストコンポーネント用スクロール領域です。
@@ -31,6 +34,9 @@ public class LeafTextScrollPane extends JScrollPane {
 	private JTextComponent comp;
 	private LeafLineNumberPane lineNumber;
 	private LeafColumnRulerPane ruler;
+	
+	private ArrayList<BookMark>marks;
+	private Element root;
 	
 	private boolean isLineNumberVisible = true, isColumnRulerVisible = true;
 	
@@ -53,7 +59,7 @@ public class LeafTextScrollPane extends JScrollPane {
 		isLineNumberVisible  = ln;
 		isColumnRulerVisible = cr;
 		
-		init(this.comp = comp);
+		init(comp);
 		
 		getViewport().setOpaque(false);
 		
@@ -64,6 +70,8 @@ public class LeafTextScrollPane extends JScrollPane {
 		setCorner(ScrollPaneConstants.LOWER_RIGHT_CORNER, new JPanel());
 		setCorner(ScrollPaneConstants.UPPER_LEFT_CORNER,  new JPanel());
 		setCorner(ScrollPaneConstants.UPPER_RIGHT_CORNER, new JPanel());
+		
+		marks = new ArrayList<BookMark>();
 	}
 	/**
 	*このスクロール領域を初期化します。
@@ -72,6 +80,7 @@ public class LeafTextScrollPane extends JScrollPane {
 	public void init(){
 		
 		comp.addCaretListener(new ExCaretListener());
+		root = comp.getDocument().getDefaultRootElement();
 		comp.getDocument().addDocumentListener(new ExDocumentListener());
 		
 		setRowHeaderView(
@@ -80,6 +89,12 @@ public class LeafTextScrollPane extends JScrollPane {
 		setColumnHeaderView(
 			ruler = (isColumnRulerVisible)? new LeafColumnRulerPane() : null
 		);
+		
+		comp.addPropertyChangeListener("font", new PropertyChangeListener(){
+			public void propertyChange(PropertyChangeEvent e){
+				init();
+			}
+		});
 	}
 	/**
 	*ビューポートに表示するテキスト領域を指定して初期化します。
@@ -116,10 +131,17 @@ public class LeafTextScrollPane extends JScrollPane {
 	private class ExDocumentListener implements DocumentListener{
 		public void changedUpdate(DocumentEvent e){}
 		public void insertUpdate(DocumentEvent e){
+			this.update();
 			repaintLineNumber();
 		}
 		public void removeUpdate(DocumentEvent e){
+			this.update();
 			repaintLineNumber();
+		}
+		private void update(){
+			for(int i=marks.size()-1;i>=0;i--){
+				marks.get(i).update();
+			}
 		}
 	}
 	/**
@@ -170,7 +192,6 @@ public class LeafTextScrollPane extends JScrollPane {
 	*/
 	public void scrollToLine(int line){
 		
-		final Element root = comp.getDocument().getDefaultRootElement();
 		line = Math.max(0, Math.min(root.getElementCount()-1, line-1));
 		
 		final Element elem = root.getElement(line);
@@ -196,6 +217,35 @@ public class LeafTextScrollPane extends JScrollPane {
 		}catch(Exception ex){
 			Toolkit.getDefaultToolkit().beep();
 		}
+	}
+	/**
+	*ブックマーク機能の実装です。
+	*/
+	private class BookMark{
+		private Element elem;
+		public BookMark(Element elem){
+			this.elem = elem;
+		}
+		public int getLine(){
+			return root.getElementIndex(elem.getStartOffset());
+		}
+		public void update(){
+			if(root.getElement(getLine()) != elem){
+				marks.remove(this);
+			}
+		}
+	}
+	/**
+	*指定された行のブックマークを検索して返します。
+	*@param line 行
+	*/
+	private BookMark getBookMark(int line){
+		for(BookMark mark : marks){
+			if(mark.getLine() == line){
+				return mark;
+			}
+		}
+		return null;
 	}
 	/**
 	*行番号を表示するコンポーネントです。
@@ -230,7 +280,6 @@ public class LeafTextScrollPane extends JScrollPane {
 		*/
 		private int getComponentWidth(){
 			Document doc   = comp.getDocument();
-			Element root  = doc.getDefaultRootElement();
 			int lineCount  = root.getElementIndex(doc.getLength());
 			int maxDigits  = Math.max(4, String.valueOf(lineCount).length());
 			return maxDigits * fontMetrics.stringWidth("0") + MARGIN * 2;
@@ -239,7 +288,6 @@ public class LeafTextScrollPane extends JScrollPane {
 		*指定された垂直座標に対応する行番号を返します。
 		*/
 		private int getLineAtPoint(int y){
-			Element root = comp.getDocument().getDefaultRootElement();
 			int pos = comp.viewToModel(new Point(0,y));
 			return root.getElementIndex(pos);
 		}
@@ -257,38 +305,54 @@ public class LeafTextScrollPane extends JScrollPane {
 			g.setColor(getBackground());
 			g.fillRect(clip.x, clip.y, clip.width, clip.height);
 			g.setColor(getForeground());
-			int base = clip.y - topInset;
+			int width = getComponentWidth();
+			int base  = clip.y - topInset;
 			int start = getLineAtPoint(base);
-			int end = getLineAtPoint(base + clip.height);
-			int y = topInset - fontHeight + fontAscent + start * fontHeight;
+			int end   = getLineAtPoint(base + clip.height);
+			int y = topInset + fontAscent + (start-1) * fontHeight;
 			for(int i = start; i <= end; i++){
 				String text = String.valueOf(i + 1);
-				int x = getComponentWidth() - MARGIN - fontMetrics.stringWidth(text);
+				int x = width - MARGIN - fontMetrics.stringWidth(text);
 				y += fontHeight;
 				g.drawString(text,x,y);
+			}
+			g.setXORMode(Color.WHITE);
+			for(BookMark mark : marks){
+				y = topInset + mark.getLine() * fontHeight;
+				g.fillRect(0, y, width-1, fontHeight);
 			}
 		}
 		/**
 		*カーソル行の行番号を返します。
 		*/
 		public int getLineNumber(){
-			Element root = comp.getDocument().getDefaultRootElement();
 			return root.getElementIndex(comp.getCaretPosition()) + 1;
 		}
 		/**
 		*コンポーネントの上でクリックすると行選択します。
+		*ダブルクリックするとブックマークを設定/解除します。
 		*/
 		private class ExMouseAdapter extends MouseAdapter{
 			public void mousePressed(MouseEvent e){
 				start = (e.getY() - topInset) / fontHeight;
 				try{
-					Element element = comp.getDocument().
+					Element elem = comp.getDocument().
 					getDefaultRootElement().getElement(start);
-					comp.select(
-						element.getStartOffset(),
-						element.getEndOffset() - 1
-					);
-					comp.requestFocusInWindow();
+					if(e.getClickCount()==1){
+						comp.select(
+							elem.getStartOffset(),
+							elem.getEndOffset() - 1
+						);
+						comp.requestFocusInWindow();
+					}else if(elem != null){
+						BookMark mark = getBookMark(start);
+						if(mark != null){ //解除
+							marks.remove(mark);
+						}else{ //設定
+							marks.add(new BookMark(elem));
+						}
+						repaint();
+					}
 				}catch(Exception ex){}
 			}
 		}
@@ -299,7 +363,6 @@ public class LeafTextScrollPane extends JScrollPane {
 			public void mouseDragged(MouseEvent e){
 				int end = (e.getY() - topInset) / fontHeight;
 				try{
-					Element root = comp.getDocument().getDefaultRootElement();
 					if(start <= end){
 						comp.select(
 							root.getElement(start).getStartOffset(),

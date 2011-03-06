@@ -1,0 +1,36 @@
+/*****************************************************
+*AriCE言語を使ってGUI時計を表示するサンプル
+*2011年2月25日
+*****************************************************/
+
+/*****************************************************
+*AriCE言語とは
+*東大アマチュア無線クラブが開発するスクリプト言語で、
+*少ない労力でプログラムが書けて、しかも習得が容易な実
+*用的マクロ言語を目指しています。強い動的型付けを行い
+*整数型・小数型・真偽値型・文字列型・null型が扱えます
+*****************************************************/
+
+import java.awt.Component;
+import java.util.Date;
+//オンデマンドインポート可能
+import javax.swing.*;
+
+function main(){
+	var frame = new JFrame("AriCE Clock");
+	frame.setBounds(10,10,240,100);
+	
+	frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+	frame.setAlwaysOnTop(true);
+	
+	var label = new JLabel();
+	frame.add(label);
+	
+	frame.setVisible(true);
+	
+	//全ての式を省略したfor文は無限ループである
+	for(){
+		label.setText (new Date().toString());
+		Thread.sleep(1000);
+	}
+}

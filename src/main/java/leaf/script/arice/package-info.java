@@ -10,6 +10,6 @@ Author: University of Tokyo Amateur Radio Club / License: GPL
 **************************************************************************************/
 
 /**
-*AriCE言語の処理系を提供するパッケージです。
+*東大アマチュア無線クラブのオリジナル言語「AriCE」を提供するパッケージです。
 */
 package leaf.script.arice;

@@ -30,7 +30,7 @@ public class LeafAudioPlayer{
 	private DataLine.Info datainfo;
 	private Clip clip;
 	private boolean looping = false;
-	private int loopcount = 10;
+	private int loopcount = 1000;
 	
 	/**プレーヤを生成します。*/
 	public LeafAudioPlayer(){}

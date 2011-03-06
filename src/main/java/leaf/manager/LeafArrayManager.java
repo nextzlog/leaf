@@ -13,6 +13,9 @@ package leaf.manager;
 import java.io.*;
 import java.util.*;
 
+import java.lang.reflect.Array;
+import java.lang.reflect.Constructor;
+
 /**
 *配列を表現する文字列と{@link ArrayList}との相互の変換を行うクラスです。
 *@author 東大アマチュア無線クラブ
@@ -41,12 +44,11 @@ public class LeafArrayManager{
 	*/
 	public static ArrayList<String> getListFromString(String separator,String str){
 		if(str==null)return null;
-		ArrayList<String> array = new ArrayList<String>();
-		String[] sarr = str.split(separator);
-		for(int i=0;i<sarr.length;i++){
-			if(sarr[i].length()>0)array.add(sarr[i]);
+		ArrayList<String> list = new ArrayList<String>();
+		for(String split : str.split(separator)){
+			if(split.length()>0)list.add(split);
 		}
-		return array;
+		return list;
 	}
 	/**
 	*配列を表現する文字列を得ます。
@@ -55,12 +57,13 @@ public class LeafArrayManager{
 	*@param arr 文字列に置き換える配列
 	*@return 区切り文字separatorで分けられた文字列
 	*/
-	public static String getStringFromArray(String separator,Object[] arr){
+	public static String getStringFromArray(String separator, Object[] arr){
 		if(arr==null||arr.length==0)return null;
-		String ret = "";
-		for(int i=0;i<arr.length;i++){
-			ret += arr[i] + separator;
-		}return ret.substring(0,Math.max(0,ret.length()-1));
+		StringBuilder sb = new StringBuilder();
+		for(Object obj : arr){
+			sb.append(obj + separator);
+		}
+		return sb.substring(0, Math.max(0, sb.length()-1));
 	}
 	/**
 	*ArrayListを表現する文字列を得ます。
@@ -71,10 +74,28 @@ public class LeafArrayManager{
 	*/
 	public static String getStringFromList(String separator,ArrayList list){
 		if(list==null)return null;
-		String ret = "";
-		for(Object obj: list){
-			ret += obj.toString() + separator;
+		StringBuilder sb = new StringBuilder();
+		for(Object obj : list){
+			sb.append(obj + separator);
 		}
-		return ret.substring(0,Math.max(0,ret.length()-1));
+		return sb.substring(0, Math.max(0, sb.length()-1));
+	}
+	/**
+	*指定された配列の部分配列を返します。
+	*部分配列の型は自動で元の配列と同じ型が適用されます。
+	*@param array 配列
+	*@param start コピー開始位置
+	*@param end   コピー終了位置
+	*@return 部分配列
+	*@since 2011年2月24日
+	*/
+	public static Object[] subArray(Object array, int start, int end){
+		Object[] src  = (Object[])array;
+		Class<?> comp = array.getClass().getComponentType();
+		Object[] ret = (Object[])Array.newInstance(comp, end-start+1);
+		for(int i=start; i<=end; i++){
+			ret[i-start] = src[i];
+		}
+		return ret;
 	}
 }

@@ -40,15 +40,15 @@ public class LeafHistoryMenu extends JMenu{
 	*/
 	public LeafHistoryMenu(HistoryMenuListener lis,ArrayList<String> list){
 		super(LeafLangManager.get("History","最近使ったファイル(H)"));
-		this.setMnemonic(KeyEvent.VK_H);
+		setMnemonic(KeyEvent.VK_H);
 		this.files = list;
 		this.listener = lis;
 		if(files==null||files.size()<=0){
-			this.setEnabled(false);
+			setEnabled(false);
 			return;
 		}
 		for(int i=files.size()-1;i>=0;i--){
-			this.update(files.get(i));
+			update(files.get(i));
 		}
 	}
 	/**
@@ -56,8 +56,8 @@ public class LeafHistoryMenu extends JMenu{
 	*@param newpath 新しいファイルのパス
 	*/
 	public void update(String newpath){
-		this.setEnabled(true);
-		this.removeAll();
+		setEnabled(true);
+		removeAll();
 		files.remove(newpath);
 		files.add(0,newpath);
 		if(files.size()>HISTORY_MAX)files.remove(files.size()-1);
@@ -73,7 +73,7 @@ public class LeafHistoryMenu extends JMenu{
 					listener.historyClicked(path);
 				}
 			});
-			this.add(item,i);
+			add(item,i);
 		}
 	}
 	/**

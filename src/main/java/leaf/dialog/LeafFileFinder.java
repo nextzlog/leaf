@@ -231,14 +231,16 @@ public final class LeafFileFinder extends LeafDialog{
 		
 		/*サブフォルダ検索*/
 		subch = new JCheckBox(LeafLangManager.get(
-			"Search In Subfolder","サブフォルダからも検索(F)"),true);
+			"Search In Subfolder","サブフォルダからも検索(F)"),true
+		);
 		subch.setBounds(5,90,200,20);
 		subch.setMnemonic(KeyEvent.VK_F);
 		add(subch);
 		
 		/*大文字と小文字を区別*/
 		casech = new JCheckBox(LeafLangManager.get(
-			"Case Sensitive","大文字と小文字を区別(C)"),true);
+			"Case Sensitive","大文字と小文字を区別(C)"),true
+		);
 		casech.setBounds(5,110,200,20);
 		casech.setMnemonic(KeyEvent.VK_C);
 		add(casech);

@@ -17,7 +17,7 @@ import java.util.*;
 
 /**
 *作業が進行していることを視覚的に通知するアイコンです。
-*@author 東大アマチュア無線クラブ 所属部員 Reise
+*@author 東大アマチュア無線クラブ
 *@since Leaf 1.0 作成：2010年5月23日
 */
 public class LeafLoadIndicatorIcon implements Icon{

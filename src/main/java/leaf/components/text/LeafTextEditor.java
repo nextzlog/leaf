@@ -360,19 +360,21 @@ public class LeafTextEditor extends LeafSplitPane {
 	*フォントを設定します。
 	*@param font フォント
 	*/
-	public void setTextFont(Font font){
-		textPane1.setFont(font);
-		textPane2.setFont(font);
-		setTabSize(textPane1.getTabSize());
-		scroll1.init();
-		scroll2.init();
+	public void setFont(Font font){
+		super.setFont(font);
+		try{
+			textPane1.setFont(font);
+			textPane2.setFont(font);
+			setTabSize(textPane1.getTabSize());
+		}catch(NullPointerException ex){}
 	}
 	/**
 	*フォントを返します。
 	*@return フォント
 	*/
-	public Font getTextFont(){
-		return textPane.getFont();
+	public Font getFont(){
+		if(textPane != null)return textPane.getFont();
+		return super.getFont();
 	}
 	/**
 	*ファイルが編集されているか返します。

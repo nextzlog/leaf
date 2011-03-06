@@ -38,7 +38,7 @@ public class LeafTextConverter{
 	*/
 	public static String halfAlfabetToFullsize(String str){
 		if(str==null)return "";
-		StringBuffer buf = new StringBuffer(str);
+		StringBuilder buf = new StringBuilder(str);
 		for(int i=0;i<buf.length();i++){
 			char ch = buf.charAt(i);
 			if(ch>='a'&&ch<='z'){
@@ -54,7 +54,7 @@ public class LeafTextConverter{
 	*/
 	public static String fullAlfabetToHalfsize(String str){
 		if(str==null)return "";
-		StringBuffer buf = new StringBuffer(str);
+		StringBuilder buf = new StringBuilder(str);
 		for(int i=0;i<buf.length();i++){
 			char ch = buf.charAt(i);
 			if(ch>='ａ'&&ch<='ｚ'){
@@ -70,7 +70,7 @@ public class LeafTextConverter{
 	*/
 	public static String halfNumberToFullsize(String str){
 		if(str==null)return "";
-		StringBuffer buf = new StringBuffer(str);
+		StringBuilder buf = new StringBuilder(str);
 		for(int i=0;i<buf.length();i++){
 			char ch=buf.charAt(i);
 			if(ch>='0'&&ch<='9'){
@@ -84,7 +84,7 @@ public class LeafTextConverter{
 	*/
 	public static String fullNumberToHalfsize(String str){
 		if(str==null)return "";
-		StringBuffer buf = new StringBuffer(str);
+		StringBuilder buf = new StringBuilder(str);
 		for(int i=0;i<buf.length();i++){
 			char ch=buf.charAt(i);
 			if(ch>='０'&&ch<='９'){
@@ -93,7 +93,7 @@ public class LeafTextConverter{
 		}return buf.toString();
 	}
 	/**
-	*大文字→小文字字の変換を行います。
+	*大文字→小文字の変換を行います。
 	*@param str 変換対象の文字列
 	*/
 	public static String toLowerCase(String str){
@@ -114,7 +114,7 @@ public class LeafTextConverter{
 	*/
 	public static String hiraganaToKatakana(String str){
 		if(str==null)return "";
-		StringBuffer buf = new StringBuffer(str);
+		StringBuilder buf = new StringBuilder(str);
 		for(int i=0;i<buf.length();i++){
 			char ch = buf.charAt(i);
 			if(ch>='ぁ'&&ch<='ん'){
@@ -128,7 +128,7 @@ public class LeafTextConverter{
 	*/
 	public static String katakanaToHiragana(String str){
 		if(str==null)return "";
-		StringBuffer buf = new StringBuffer(str);
+		StringBuilder buf = new StringBuilder(str);
 		for(int i=0;i<buf.length();i++){
 			char ch = buf.charAt(i);
 			if(ch>='ァ'&&ch<='ン'){

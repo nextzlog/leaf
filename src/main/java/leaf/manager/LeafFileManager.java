@@ -13,6 +13,8 @@ package leaf.manager;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FilenameFilter;
+import java.io.IOException;
+import java.text.DateFormat;
 import java.util.ArrayList;
 
 /**
@@ -47,7 +49,9 @@ public class LeafFileManager{
 	*@param list 拡張子のリスト
 	*@param dir ディレクトリを含める場合true
 	*/
-	public static FileFilter createFileFilter(final ArrayList<String> list, final boolean dir){
+	public static FileFilter createFileFilter
+		(final ArrayList<String> list, final boolean dir){
+		
 		FileFilter filter = new FileFilter(){
 			public boolean accept(File file){
 				if(file.isDirectory()){
@@ -60,6 +64,17 @@ public class LeafFileManager{
 		return filter;
 	}
 	
+	/**
+	*起点ディレクトリとファイル名の一部を指定してファイルを再帰的に検索します。
+	*このメソッドは{#searchIgnoreCase(File,String,String,boolean)}の簡易メソッドです。
+	*@param dir 起点ディレクトリ
+	*@param name 検索対象のファイル名の一部
+	*@return 見つかったファイル
+	*/
+	public File[] search (File dir, final String name){
+		
+		return search(dir, name, ".+", true);
+	}
 	/**
 	*起点ディレクトリとファイル名の一部と拡張子を指定してファイルを検索します。
 	*isRecursiveをtrueにすると子ディレクトリ内も含めた再帰的検索を行います。
@@ -90,7 +105,7 @@ public class LeafFileManager{
 	}
 	/**
 	*起点ディレクトリとファイル名の一部と拡張子を指定し、
-	*大文字と小文字を無視してファイルを検索します。
+	*大文字と小文字の区別を無視してファイルを検索します。
 	*isRecursiveをtrueにすると子ディレクトリ内も含めた再帰的検索を行います。
 	*@param dir 起点ディレクトリ
 	*@param name 検索対象のファイル名の一部
@@ -156,11 +171,11 @@ public class LeafFileManager{
 	private void list(ArrayList<File> list, File dir, FileFilter filter){
 		File[] children = dir.listFiles(filter);
 		if(children == null) return;
-		for(int i=0;i<children.length;i++){
-			if(children[i].isDirectory()){
-				list(list,children[i],filter);
+		for(File child : children){
+			if(child.isDirectory()){
+				list(list, child, filter);
 			}else{
-				list.add(children[i]);
+				list.add(child);
 			}
 		}
 	}
@@ -180,12 +195,28 @@ public class LeafFileManager{
 	private void list(ArrayList<File> list, File dir, FilenameFilter filter){
 		File[] children = dir.listFiles(filter);
 		if(children == null) return;
-		for(int i=0;i<children.length;i++){
-			if(children[i].isDirectory()){
-				list(list,children[i],filter);
+		for(File child : children){
+			if(child.isDirectory()){
+				list(list, child, filter);
 			}else{
-				list.add(children[i]);
+				list.add(child);
 			}
 		}
+	}
+	/**
+	*指定されたディレクトリのファイル一覧の表現を返します。
+	*@return 最終更新日時+種別+ファイル名の配列
+	*/
+	public String[] dir(File dir){
+		File[] files = dir.listFiles();
+		String[] res = new String[files.length];
+		DateFormat format = DateFormat.getDateTimeInstance();
+		for(int i=0; i<files.length; i++){
+			res[i] = String.format(
+				"%-24s%-7s%-16s", format.format(files[i].lastModified()),
+				((files[i].isDirectory())? "<DIR>" : ""), files[i].getName()
+			);
+		}
+		return res;
 	}
 }

@@ -78,7 +78,7 @@ public final class LeafSearchDialog extends LeafDialog{
 		init();
 	}
 	/**
-	*検索・検索対象のテキストコンポーネントを指定して検索ダイアログを生成します。
+	*検索対象のテキストコンポーネントを指定して検索ダイアログを表示します。
 	*@param component 検索操作対象のテキスト領域
 	*/
 	public void showDialog(JTextComponent component){
@@ -86,11 +86,25 @@ public final class LeafSearchDialog extends LeafDialog{
 		setVisible(true);
 	}
 	/**
+	*検索対象のテキストコンポーネントを設定します。
+	*@param component 検索操作対象のテキスト領域
+	*/
+	public void setTextComponent(JTextComponent component){
+		this.component = component;
+	}
+	/**
 	*現在の検索キーワードを返します。
 	*@return 最後に入力された検索文字列
 	*/
 	public String getSearchText(){
 		return matcher.pattern().pattern();
+	}
+	/**
+	*検索キーワードを設定します。
+	*@param text 検索文字列
+	*/
+	public void setSearchText(String text){
+		addItem(scomb,text);
 	}
 	/**
 	*ダイアログを表示することなく「次を検索」を実行します。
@@ -134,14 +148,16 @@ public final class LeafSearchDialog extends LeafDialog{
 		
 		/*大文字と小文字を区別*/
 		casech = new JCheckBox(LeafLangManager.get(
-			"Case Sensitive","大文字と小文字を区別(C)"),true);
+			"Case Sensitive","大文字と小文字を区別(C)"),true
+		);
 		casech.setBounds(5,40,190,20);
 		casech.setMnemonic(KeyEvent.VK_C);
 		add(casech);
 		
 		/*正規表現*/
 		regch = new JCheckBox(LeafLangManager.get(
-			"Regex Search","正規表現検索(R)"),true);
+			"Regex Search","正規表現検索(R)"),true
+		);
 		regch.setBounds(5,60,190,20);
 		regch.setMnemonic(KeyEvent.VK_R);
 		add(regch);
@@ -154,7 +170,8 @@ public final class LeafSearchDialog extends LeafDialog{
 		
 		/*DOTALL*/
 		dotch = new JCheckBox(LeafLangManager.get(
-			"DOTALL MODE","DOTALLモード"));
+			"DOTALL MODE","DOTALLモード"
+		));
 		dotch.setBounds(5,80,190,20);
 		dotch.setMnemonic(KeyEvent.VK_O);
 		add(dotch);
@@ -249,8 +266,10 @@ public final class LeafSearchDialog extends LeafDialog{
 		if(getText(scomb).length()==0)return;
 		addItem(scomb,getText(scomb));
 		if(!search(ward)){
-			showMessage(LeafLangManager.get("Not found.",
-				getOrientText(ward) +" \" "+ getText(scomb)+" \" が見つかりません。"
+			showMessage(LeafLangManager.translate(
+				"Not found \"[arg]\" [arg].",
+				"「[arg]」が[arg]見つかりません",
+				getText(scomb), getOrientText(ward)
 			));
 		}
 	}
@@ -258,13 +277,13 @@ public final class LeafSearchDialog extends LeafDialog{
 	private String getOrientText(int ward){
 		switch(ward){
 			case SEARCH_UPWARD:
-				return LeafLangManager.get("Upward","前方に");
+				return LeafLangManager.get("upward","前方に");
 			case SEARCH_DOWNWARD:
-				return LeafLangManager.get("Downward","後方に");
+				return LeafLangManager.get("downward","後方に");
 			case SEARCH_FIRST:
-				return LeafLangManager.get("Nothing","全く");
+				return LeafLangManager.get("at all","全く");
 			case SEARCH_LAST:
-				return LeafLangManager.get("Nothing","全く");
+				return LeafLangManager.get("at all","全く");
 			default:
 				return null;
 		}
@@ -272,6 +291,7 @@ public final class LeafSearchDialog extends LeafDialog{
 	/**検索方向を指定して検索*/
 	private boolean search(int ward){
 		updatePattern();
+		component.requestFocusInWindow();
 		try{
 			switch(ward){
 				case SEARCH_UPWARD:
