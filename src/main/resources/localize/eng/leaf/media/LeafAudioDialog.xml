@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LeafAudioDialog>
+  <entry key="title" value="Audio Player"/>
+  <entry key="button_open" value="Open File"/>
+  <entry key="button_play" value="Play / Pause"/>
+  <entry key="button_stop" value="Stop"/>
+  <entry key="button_loop" value="Loop"/>
+  <entry key="label_no_file_selected" value="no file selected"/>
+</LeafAudioDialog>

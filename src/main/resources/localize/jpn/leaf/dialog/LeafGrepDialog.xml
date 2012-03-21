@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LeafGrepDialog>
+  <entry key="title" value="GREP"/>
+  <entry key="label_pattern" value="検索条件"/>
+  <entry key="label_filename_extension" value="拡張子"/>
+  <entry key="label_root_directory" value="検索場所"/>
+  <entry key="check_search_in_sub_dirs" value="サブディレクトリ内も検索(S)"/>
+  <entry key="check_case_sensitive" value="大文字と小文字を区別(C)"/>
+  <entry key="check_regex" value="正規表現(R)"/>
+  <entry key="check_dotall" value="Dotall"/>
+  <entry key="button_find" value="検索(F)"/>
+  <entry key="button_close" value="閉じる"/>
+  <entry key="exists_dir_not_exist" value="%s%nは存在しないディレクトリです。"/>
+  <entry key="search_pattern_empty" value="検索条件を指定してください。"/>
+  <entry key="search_illegal_pattern" value="検索条件 (正規表現) の構文に誤りがあります。"/>
+</LeafGrepDialog>

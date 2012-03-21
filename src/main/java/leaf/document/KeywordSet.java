@@ -1,19 +1,17 @@
 /**************************************************************************************
-月白プロジェクト Java 拡張ライブラリ 開発コードネーム「Leaf」
-始動：2010年6月8日
-バージョン：Edition 1.1
+ライブラリ「LeafAPI」 開発開始：2010年6月8日
 開発言語：Pure Java SE 6
-開発者：東大アマチュア無線クラブ 川勝孝也
+開発者：東大アマチュア無線クラブ
 ***************************************************************************************
 License Documents: See the license.txt (under the folder 'readme')
 Author: University of Tokyo Amateur Radio Club / License: GPL
 **************************************************************************************/
 package leaf.document;
 
-import java.io.*;
 import java.beans.XMLEncoder;
 import java.beans.XMLDecoder;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
 *強調キーワードセットの実装です。
@@ -24,8 +22,8 @@ import java.util.*;
 public class KeywordSet{
 	
 	private String name = null;
-	private ArrayList<String> exts = new ArrayList<String>();
-	private ArrayList<String> keywords = new ArrayList<String>();
+	private ArrayList<String> exts;
+	private ArrayList<String> keywords;
 	private String commentBlockStart = null;
 	private String commentBlockEnd   = null;
 	private String commentLineStart  = null;
@@ -35,6 +33,9 @@ public class KeywordSet{
 	*/
 	public KeywordSet(){
 		this.name = null;
+		//必須
+		this.exts = new ArrayList<String>(0);
+		this.keywords = new ArrayList<String>(0);
 	}
 	/**
 	*名前を指定してセットを生成します。
@@ -42,6 +43,9 @@ public class KeywordSet{
 	*/
 	public KeywordSet(String name){
 		this.name = name;
+		//必須
+		this.exts = new ArrayList<String>(0);
+		this.keywords = new ArrayList<String>(0);
 	}
 	/**
 	*セットの名前を返します。
@@ -58,26 +62,32 @@ public class KeywordSet{
 	/**
 	*拡張子のリストを返します。
 	*/
-	public ArrayList<String> getExtensions(){
+	public List<String> getExtensions(){
 		return exts;
 	}
 	/**
 	*拡張子のリストを設定します。
 	*/
-	public void setExtensions(ArrayList<String> exts){
-		this.exts = exts;
+	public void setExtensions(List<String> exts){
+		if(exts instanceof ArrayList)
+			this.exts = (ArrayList<String>)exts;
+		else
+			this.exts = new ArrayList<String>(exts);
 	}
 	/**
 	*キーワードのリストを返します。
 	*/
-	public ArrayList<String> getKeywords(){
+	public List<String> getKeywords(){
 		return keywords;
 	}
 	/**
 	*キーワードのリストを設定します。
 	*/
-	public void setKeywords(ArrayList<String> list){
-		this.keywords = keywords;
+	public void setKeywords(List<String> list){
+		if(list instanceof ArrayList)
+			this.keywords = (ArrayList<String>)list;
+		else
+			this.keywords = new ArrayList<String>(list);
 	}
 	/**
 	*コメントブロックの開始記号を返します。

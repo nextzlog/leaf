@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<AriceFunctionTable>
+  <entry key="define_exception" value="%s is already defined."/>
+  <entry key="checkAllDefined_exception" value="%s is(are) not defined."/>
+</AriceFunctionTable>

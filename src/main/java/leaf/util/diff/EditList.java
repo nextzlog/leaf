@@ -1,9 +1,7 @@
 /**************************************************************************************
-月白プロジェクト Java 拡張ライブラリ 開発コードネーム「Leaf」
-始動：2010年6月8日
-バージョン：Edition 1.1
+ライブラリ「LeafAPI」 開発開始：2010年6月8日
 開発言語：Pure Java SE 6
-開発者：東大アマチュア無線クラブ 川勝孝也
+開発者：東大アマチュア無線クラブ
 ***************************************************************************************
 License Documents: See the license.txt (under the folder 'readme')
 Author: University of Tokyo Amateur Radio Club / License: GPL
@@ -15,46 +13,58 @@ import java.beans.XMLEncoder;
 import java.io.*;
 
 /**
-*一連の編集操作を順序どおりに管理するリストです。
-*@author 東大アマチュア無線クラブ
-*@since Leaf 1.1 作成：2010年9月20日
-*/
+ *一連の編集操作を順序どおりに管理するリストです。
+ *
+ *@author 東大アマチュア無線クラブ
+ *@since Leaf 1.1 作成：2010年9月20日
+ */
 public class EditList{
-	
 	private Edit[] edits;
 	
 	/**
-	*空の編集内容を持つリストを生成します。
-	*/
+	 *空の編集内容を持つリストを生成します。
+	 */
 	public EditList(){
 		edits = new Edit[0];
 	}
 	/**
-	*編集内容を指定してリストを生成します。
-	*@param edits 編集内容
-	*/
+	 *編集内容を指定してリストを生成します。
+	 *@param edits 編集内容
+	 */
 	public EditList(Edit[] edits){
 		this.edits = edits;
 	}
 	/**
-	*編集内容を返します。
-	*@return 編集の手順
-	*/
+	 *編集内容を返します。
+	 *@return 編集の手順
+	 */
 	public Edit[] getEdits(){
 		return edits;
 	}
 	/**
-	*編集内容を設定します。
-	*@param edits 編集の手順
-	*/
+	 *編集内容を設定します。
+	 *@param edits 編集の手順
+	 */
 	public void setEdits(Edit[] edits){
 		this.edits = edits;
 	}
 	/**
-	*指定されたXMLファイルにリストを保存します。
-	*@param file XMLファイル
-	*@throws FileNotFoundException ファイルに書き込めない場合
-	*/
+	 *編集内容を表現する文字列を返します。
+	 *@return 差分表示文字列
+	 */
+	public String toString(){
+		StringBuilder sb = new StringBuilder();
+		final int max = edits.length;
+		for(int i = 0; i < max; i++){
+			sb.append(edits[i]).append('\n');
+		}
+		return sb.toString();
+	}
+	/**
+	 *指定されたXMLファイルにリストを保存します。
+	 *@param file XMLファイル
+	 *@throws FileNotFoundException ファイルに書き込めない場合
+	 */
 	public void save(File file) throws FileNotFoundException{
 		
 		FileOutputStream fstream = null;
@@ -74,15 +84,16 @@ public class EditList{
 		}
 	}
 	/**
-	*指定されたXMLファイルからリストを読み込んで生成します。
-	*@param file XMLファイル
-	*@return リスト
-	*@throws FileNotFoundException ファイルが見つからない場合
-	*@throws ArrayIndexOutOfBoundsException ストリームにオブジェクトがなかった場合
-	*@throws ClassCastException 読み込んだオブジェクトがこのクラスのインスタンスでない場合
-	*/
+	 *指定されたXMLファイルからリストを読み込んで生成します。
+	 *@param file XMLファイル
+	 *@return リスト
+	 *
+	 *@throws FileNotFoundException ファイルが見つからない場合
+	 *@throws ArrayIndexOutOfBoundsException ストリームにオブジェクトがなかった場合
+	 *@throws ClassCastException 読み込んだオブジェクトの型が一致しない場合
+	 */
 	public static EditList load(File file)
-		throws FileNotFoundException, ArrayIndexOutOfBoundsException, ClassCastException{
+	throws FileNotFoundException, ArrayIndexOutOfBoundsException, ClassCastException{
 		
 		FileInputStream fstream = null;
 		BufferedInputStream bstream = null;

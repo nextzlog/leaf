@@ -25,6 +25,6 @@ javadoc {
 }
 
 jar {
-	manifest.attributes 'Main-Class': 'Demo'
-	manifest.attributes 'SplashScreen-Image': 'leaf/icon/images/welcome.png'
+	manifest.attributes 'Main-Class': 'leaf.demo.Demo'
+	manifest.attributes 'SplashScreen-Image': 'images/style/LEAF.png'
 }

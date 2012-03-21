@@ -1,9 +1,7 @@
 /**************************************************************************************
-月白プロジェクト Java 拡張ライブラリ 開発コードネーム「Leaf」
-始動：2010年6月8日
-バージョン：Edition 1.1
+ライブラリ「LeafAPI」 開発開始：2010年6月8日
 開発言語：Pure Java SE 6
-開発者：東大アマチュア無線クラブ 川勝孝也
+開発者：東大アマチュア無線クラブ
 ***************************************************************************************
 License Documents: See the license.txt (under the folder 'readme')
 Author: University of Tokyo Amateur Radio Club / License: GPL
@@ -14,59 +12,70 @@ import java.awt.*;
 import javax.swing.text.*;
 
 /**
-*水平タブや改行の表示機能を実装するエディタキットです。
-*Java Swing Tips てんぷらメモさんの公開するサンプルをベースにしています。
+*水平タブや改行の可視化機能を実装するキットです。
+*
 *@author 東大アマチュア無線クラブ
-*@since Leaf 1.0 作成：2010年5月22日
-*@see LeafStyledDocument
+*@since Leaf 1.0 作成：2011年6月15日
+*@see LeafSyntaxDocument
+*@see leaf.swing.text.LeafTextPane
 */
 public class LeafEditorKit extends StyledEditorKit{
-	
-	public ViewFactory getViewFactory(){
-		return new StyledViewFactory();
+	/**
+	*キットを構築します。
+	*/
+	public LeafEditorKit(){
+		super();
 	}
-	private class StyledViewFactory implements ViewFactory{
-		
-		public View create(Element elm){
-			String kind = elm.getName();
+	/**
+	*ビューを作成するファクトリを返します。
+	*@return ビューファクトリ
+	*/
+	@Override
+	public ViewFactory getViewFactory(){
+		return new LeafViewFactory();
+	}
+	private final class LeafViewFactory implements ViewFactory{
+		public View create(Element elem){
+			String kind = elem.getName();
 			if(kind != null){
 				if(kind.equals(AbstractDocument.ContentElementName)){
-					return new LeafLabelView(elm);
+					return new LeafLabelView(elem);
 				}else if(kind.equals(AbstractDocument.ParagraphElementName)){
-					return new LeafParagraphView(elm);
+					return new LeafParagraphView(elem);
 				}else if(kind.equals(AbstractDocument.SectionElementName)){
-					return new LeafNoWrapBoxView(elm,View.Y_AXIS);
+					return new BoxView(elem,View.Y_AXIS);
 				}else if(kind.equals(StyleConstants.ComponentElementName)){
-					return new ComponentView(elm);
+					return new ComponentView(elem);
 				}else if(kind.equals(StyleConstants.IconElementName)){
-					return new IconView(elm);
+					return new IconView(elem);
 				}
-			}return new LeafLabelView(elm);
+			}
+			return new LeafLabelView(elem);
 		}
 	}
-	/**改行の防止*/
-	private  class LeafNoWrapBoxView extends BoxView{
-
-		public LeafNoWrapBoxView(Element elm,int axis){
-			super(elm,axis);
-		}
-		public void layout(int width,int height){
-			super.layout(Integer.MAX_VALUE-64,height);
-		}
-	}
+	/**行折り返しの禁止 : 2011年6月15日廃止:LeafTextPane内で十分*/
+//	private final class LeafNoWrapBoxView extends BoxView{
+//		public LeafNoWrapBoxView(Element elm,int axis){
+//			super(elm,axis);
+//		}
+//		public void layout(int width,int height){
+//			try{
+//				super.layout(8192,height);
+//			}catch(Exception ex){
+//				super.layout(width,height);//2011年3月29日追加
+//			}
+//		}
+//	}
 	/**改行の可視化*/
-	private  class LeafParagraphView extends ParagraphView{
+	private final class LeafParagraphView extends ParagraphView{
 		private final Color col = new Color(60,70,200);
-
 		public LeafParagraphView(Element elm){
 			super(elm);
 		}
-
 		public void paint(Graphics g,Shape allocation){
 			super.paint(g,allocation);
 			paintCustomParagraph(g,allocation);
 		}
-		
 		private void paintCustomParagraph(Graphics g,Shape a){
 			try{
 				Shape p = modelToView(getEndOffset(),a,Position.Bias.Backward);
@@ -87,32 +96,27 @@ public class LeafEditorKit extends StyledEditorKit{
 		}
 	}
 	/**タブの可視化*/
-	private  class LeafLabelView extends LabelView{
-		
+	private final class LeafLabelView extends LabelView{
 		private final Color col = new Color(160,160,160);
-		
 		public LeafLabelView(Element elm){
 			super(elm);
 		}
-		
 		public void paint(Graphics g,Shape a){
 			super.paint(g,a);
-			Graphics2D g2 = (Graphics2D)g;
-			Rectangle allocation = (a instanceof Rectangle)?(Rectangle)a:a.getBounds();
-			FontMetrics metrics = g.getFontMetrics();
-			int sumOfTabs = 0;
+			Rectangle alloc = a.getBounds();
+			FontMetrics met = g.getFontMetrics();
 			String text = getText(getStartOffset(),getEndOffset()).toString();
-			for(int i=0;i<text.length();i++){
-				String s = text.substring(i,i+1);
-				int previousStringWidth = metrics.stringWidth(text.substring(0,i))+sumOfTabs;
-				int sx= allocation.x+previousStringWidth;
-				int sy = allocation.y;
-				if(s.equals("\t")){
+			int sumOfTabs = 0, length = text.length();
+			for(int i=0;i<length;i++){
+				char ch = text.charAt(i);
+				int previousWidth = met.stringWidth(text.substring(0,i))+sumOfTabs;
+				int sx = alloc.x + previousWidth, sy = alloc.y;
+				if(ch == '\t'){
 					int tabWidth = (int)getTabExpander().nextTabStop((float)sx,i)-sx;
-					g2.setColor(col);
-					g2.drawLine(sx,sy+2,sx+2,sy);
-					g2.drawLine(sx+2,sy,sx+4,sy+2);
-					sumOfTabs+=tabWidth;
+					g.setColor(col);
+					g.drawLine(sx, sy+2, sx+2, sy);
+					g.drawLine(sx+2, sy, sx+4, sy+2);
+					sumOfTabs += tabWidth;
 				}
 			}
 		}

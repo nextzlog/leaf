@@ -1,9 +1,7 @@
 /**************************************************************************************
-月白プロジェクト Java 拡張ライブラリ 開発コードネーム「Leaf」
-始動：2010年6月8日
-バージョン：Edition 1.1
+ライブラリ「LeafAPI」 開発開始：2010年6月8日
 開発言語：Pure Java SE 6
-開発者：東大アマチュア無線クラブ 川勝孝也
+開発者：東大アマチュア無線クラブ
 ***************************************************************************************
 License Documents: See the license.txt (under the folder 'readme')
 Author: University of Tokyo Amateur Radio Club / License: GPL
@@ -11,16 +9,14 @@ Author: University of Tokyo Amateur Radio Club / License: GPL
 package leaf.icon;
 
 import java.awt.*;
-import javax.swing.*;
+import javax.swing.Icon;
 
 /**
 *閉じるアイコンの実装です。
 *@author 東大アマチュア無線クラブ
 *@since Leaf 1.0 作成：2010年5月22日
 */
-public class LeafCloseIcon implements Icon{
-	private final int width = 16;
-	private final int height= 16;
+public final class LeafCloseIcon implements Icon{
 	public void paintIcon(Component comp,Graphics g,int x,int y){
 		g.translate(x,y);//原点指定
 		g.setColor(Color.BLACK);
@@ -33,9 +29,9 @@ public class LeafCloseIcon implements Icon{
 		g.translate(-x,-y);
 	}
 	public int getIconWidth(){
-		return width;
+		return 16;
 	}
 	public int getIconHeight(){
-		return height;
+		return 16;
 	}
 }

@@ -1,177 +1,165 @@
 /**************************************************************************************
-月白プロジェクト Java 拡張ライブラリ 開発コードネーム「Leaf」
-始動：2010年6月8日
-バージョン：Edition 1.1
+ライブラリ「LeafAPI」 開発開始：2010年6月8日
 開発言語：Pure Java SE 6
-開発者：東大アマチュア無線クラブ 川勝孝也
+開発者：東大アマチュア無線クラブ
 ***************************************************************************************
 License Documents: See the license.txt (under the folder 'readme')
 Author: University of Tokyo Amateur Radio Club / License: GPL
 **************************************************************************************/
 package leaf.script.arice;
 
-import java.io.BufferedReader;
+import leaf.script.common.util.Code;
+
 import java.io.IOException;
 import java.io.Reader;
-import java.util.ArrayList;
+import java.io.StringReader;
 import javax.script.*;
 
+import static javax.script.ScriptContext.*;
+
 /**
-*AriCE言語のスクリプトエンジンです。
-*@author 東大アマチュア無線クラブ
-*@since Leaf 1.1 作成：2010年9月29日
-*/
-public class AriceScriptEngine{
+ *AriCE処理系本体の実装です。
+ *
+ *@author 東大アマチュア無線クラブ
+ *@since  Leaf 1.1 作成：2010年9月29日
+ */
+public final class AriceScriptEngine
+ extends AbstractScriptEngine implements Compilable{
 	
-	protected static final int STACK_SIZE = 4096;
-	protected static final int STEP_MAX   = Integer.MAX_VALUE >> 3;
-	
-	private Bindings bind;
+ 	protected static final int FRAME_NEST_MAX = 1024;
+ 	protected static final int STACK_SIZE_MAX = 4096;
+ 	protected static final int EXECUTE_STEP_MAX = Integer.MAX_VALUE >> 3;
 	
 	private final AriceParser parser;
 	private final AriceVirtualMachine vm;
 	
-	private final StringBuilder script;
-	private Code[] medcodes;
-	
 	/**
-	*エンジンを生成します。
+	*エンジンを構築します。
 	*/
 	public AriceScriptEngine(){
-		bind   = new SimpleBindings();
+		super();
 		parser = new AriceParser();
 		vm     = new AriceVirtualMachine();
-		script = new StringBuilder(STACK_SIZE*2);
 	}
 	/**
-	*Bindingsを指定してエンジンを生成します。
-	*@param bind 使用するBindings
+	*エンジンスコープのBindingsを指定してエンジンを構築します。
+	*@param bind 関連付けるBindings
 	*/
 	public AriceScriptEngine(Bindings bind){
-		this.bind = bind;
+		super(bind);
 		parser = new AriceParser();
-		vm = new AriceVirtualMachine();
-		script = new StringBuilder(STACK_SIZE*2);
+		vm     = new AriceVirtualMachine();
 	}
+ 	/**
+ 	*新しいBindingsを生成して返します。
+ 	*@return 新規のBindings
+ 	*/
+ 	@Override
+ 	public Bindings createBindings(){
+ 		return new SimpleBindings();
+ 	}
 	/**
 	*スクリプトをコンパイルします。
-	*@param script スクリプト
-	*@throws ScriptException コンパイルエラー
+ 	*@param reader スクリプトのソース
+	*@return コンパイルされたスクリプト
+ 	*@throws ScriptException コンパイルに失敗した場合
 	*/
-	public void compile(String script) throws ScriptException{
-		medcodes = parser.compile(this.script + script);
-	}
-	/**
-	*スクリプトをコンパイルします。
-	*@param reader スクリプトを読み込むリーダ
-	*@throws IOException 読込エラーがあった場合
-	*@throws ScriptException コンパイルエラー
+ 	@Override
+ 	public CompiledScript compile(Reader reader)
+ 	throws ScriptException{
+ 		try{
+ 			return new AriceCompiledScript(parser.compile(reader));
+ 		}finally{
+ 			try{
+ 				if(reader != null) reader.close();
+ 			}catch(IOException ex){
+ 				throw new ScriptException(ex);
+ 			}
+ 		}
+ 	}
+ 	/**
+ 	*スクリプトをコンパイルします。
+ 	*@param script スクリプト
+ 	*@return コンパイルされたスクリプト
+ 	*@throws ScriptException コンパイルに失敗した場合
+ 	*/
+ 	@Override
+ 	public CompiledScript compile(String script)
+ 	throws ScriptException{
+ 		return compile(new StringReader(script));
+ 	}
+ 	/**
+ 	*スクリプトをコンパイルして実行します。
+ 	*@param reader スクリプトのソース
+ 	*@param context 関連付けるコンテキスト
+ 	*@return スクリプトの戻り値
+ 	*@throws ScriptException 実行時例外があった場合
+ 	*/
+ 	@Override
+ 	public Object eval(Reader reader, ScriptContext context)
+ 	throws ScriptException{
+ 		return compile(reader).eval(context);
+ 	}
+ 	/**
+ 	*スクリプトをコンパイルして実行します。
+ 	*@param script スクリプト
+ 	*@param context 関連付けるコンテキスト
+ 	*@return スクリプトの戻り値
+ 	*@throws ScriptException 実行時例外があった場合
+ 	*/
+ 	@Override
+ 	public Object eval(String script, ScriptContext context)
+ 	throws ScriptException{
+ 		return compile(script).eval(context);
+ 	}
+ 	/**
+	*AriCE言語のコンパイル結果を格納します。
+ 	*
+ 	*@author 東大アマチュア無線クラブ
+ 	*@since  Leaf 1.3 作成：2011年7月8日
 	*/
-	public void compile(Reader reader) throws IOException, ScriptException{
-		BufferedReader breader;
-		if(reader instanceof BufferedReader)
-			breader = (BufferedReader)reader;
-		else
-			breader = new BufferedReader(reader);
-		
-		StringBuilder sb = new StringBuilder();
-		String line;
-		while((line = breader.readLine()) != null){
-			sb.append(line);
-			sb.append("\n");
+	public final class AriceCompiledScript extends CompiledScript{
+		private final Code[] medcodes;
+		AriceCompiledScript(Code[] codes){
+			this.medcodes = codes;
 		}
-		breader.close();
-		compile(sb.toString());
-	}
-	/**
-	*コンパイル済みのスクリプトを実行します。
-	*@throws ScriptException 実行エラーがあった場合
-	*/
-	public Object eval() throws ScriptException{
-		return vm.execute(medcodes, bind);
-	}
-	/**
-	*スクリプトをコンパイルして実行します。
-	*@param script スクリプト
-	*@throws ScriptException 実行エラーがあった場合
-	*/
-	public Object eval(String script) throws ScriptException{
-		return eval(script, bind);
-	}
-	/**
-	*スクリプトをコンパイルして実行します。
-	*@param script スクリプト
-	*@param bind エンジンに渡されるバインディング
-	*@return スクリプトの戻り値
-	*@throws ScriptException 実行エラーがあった場合
-	*/
-	public Object eval(String script, Bindings bind) throws ScriptException{
-		compile(script);
-		return vm.execute(medcodes, (this.bind = bind));
-	}
-	/**
-	*スクリプトをコンパイルして実行します。
-	*@param reader スクリプトを読み込むリーダ
-	*@throws IOException 読込エラーがあった場合
-	*@throws ScriptException 実行エラーがあった場合
-	*/
-	public Object eval(Reader reader) throws IOException, ScriptException{
-		return eval(reader, bind);
-	}
-	/**
-	*スクリプトをコンパイルして実行します。
-	*@param reader スクリプトを読み込むリーダ
-	*@param bind エンジンに渡されるバインディング
-	*@return スクリプトの戻り値
-	*@throws IOException 読込エラーがあった場合
-	*@throws ScriptException 実行エラーがあった場合
-	*/
-	public Object eval(Reader reader, Bindings bind) throws IOException, ScriptException{
-		compile(reader);
-		return vm.execute(medcodes, (this.bind = bind));
-	}
-	/**
-	*スクリプトファイルをインクルードします。
-	*@param reader スクリプトを読み込むリーダ
-	*@throws IOException 読込エラーがあった場合
-	*/
-	public void include(Reader reader) throws IOException{
-		BufferedReader breader;
-		if(reader instanceof BufferedReader)
-			breader = (BufferedReader)reader;
-		else
-			breader = new BufferedReader(reader);
-		
-		String line;
-		while((line = breader.readLine()) != null){
-			script.append(line);
-			script.append("\n");
+		/**
+		*コンパイル済みのスクリプトを実行します。
+		*@param context 関連付けられるコンテキスト
+		*@return スクリプトの返り値
+		*@throws ScriptException 実行時例外があった場合
+		*/
+		@Override
+		public Object eval(ScriptContext context) throws ScriptException{
+			Bindings bind = context.getBindings(ENGINE_SCOPE);
+			return vm.execute(medcodes, bind);
 		}
-		breader.close();
-	}
-	/**
-	*コンパイル済みの中間言語コードをディスアセンブルして返します。
-	*@return ディスアセンブルされたコード
-	*/
-	public String disassemble(){
-		try{
-			return new AriceDisassembler().disassemble(medcodes);
-		}catch(ScriptException ex){
-			return ex.getMessage();
+		/**
+		*スクリプトに関連付けられたエンジンを返します。
+		*@return エンジン本体
+		*/
+		@Override
+		public ScriptEngine getEngine(){
+			return AriceScriptEngine.this;
+		}
+		/**
+		*スクリプトを逆コンパイルして返します。
+		*@return 逆コンパイルされたソース
+		*/
+		public String disassemble(){
+			try{
+				return new AriceDisassembler().disassemble(medcodes);
+			}catch(ScriptException ex){
+				return ex.getMessage();
+			}
 		}
 	}
-	/**
-	*オブジェクトと値のバインディングを返します。
-	*@return バインディング
-	*/
-	public Bindings getBindings(){
-		return bind;
-	}
-	/**
-	*オブジェクトと値のバインディングを設定します。
-	*@param bind バインディング
-	*/
-	public void setBindings(Bindings bind){
-		this.bind = bind;
-	}
+ 	/**
+ 	*このエンジンに関連付けられたファクトリを返します。
+ 	*@return ファクトリ
+ 	*/
+ 	@Override
+ 	public ScriptEngineFactory getFactory(){
+ 		return AriceScriptEngineFactory.getInstance();
+ 	}
 }

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LeafSearchDialog>
+  <entry key="title" value="検索"/>
+  <entry key="label_pattern" value="条件"/>
+  <entry key="check_case_sensitive" value="大文字と小文字を区別(C)"/>
+  <entry key="check_regex" value="正規表現(G)"/>
+  <entry key="check_dotall" value="Dotall"/>
+  <entry key="panel_direction" value="検索方向"/>
+  <entry key="radio_direction_up" value="上へ(U)"/>
+  <entry key="radio_direction_down" value="下へ(D)"/>
+  <entry key="button_find_next" value="次を検索(N)"/>
+  <entry key="button_find_first" value="先頭検索(F)"/>
+  <entry key="button_close" value="閉じる"/>
+  <entry key="search_pattern_empty" value="検索条件を指定してください。"/>
+  <entry key="not_found" value="「%.50s」が見つかりません。"/>
+</LeafSearchDialog>

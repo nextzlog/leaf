@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<AriceParser>
+  <entry key="getNextToken_exception" value="Program is not ended."/>
+  <entry key="error_Token_exception" value="&quot;%s&quot; is illegal here."/>
+  <entry key="parseIdentifier_exception" value="Field or method is required here."/>
+  <entry key="parseCase_exception" value="Conditional expression is not written."/>
+  <entry key="parseDefault_exception_case" value="default block must be the last."/>
+  <entry key="parseDefault_exception_default" value="default block is duplicate."/>
+  <entry key="parseBreak_exception" value="Block name is required here."/>
+  <entry key="parseShortDeclarative_exception" value="%s is not initialized."/>
+  <entry key="parseVariableAssign_exception" value="%s is not assigned."/>
+  <entry key="parseFieldAssign_exception" value="%s is not assigned."/>
+  <entry key="parseFunction_exception" value="Function name is required here."/>
+</AriceParser>

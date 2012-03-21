@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LexTable>
+  <entry key="error_char_exception" value="文字 &apos;%s&apos; はここには記述できません"/>
+  <entry key="readString_exception" value="文字列リテラルは1行の中で完結させてください"/>
+  <entry key="checkNextToken_exception" value="字句 &quot;%s&quot; はここには記述できません"/>
+</LexTable>

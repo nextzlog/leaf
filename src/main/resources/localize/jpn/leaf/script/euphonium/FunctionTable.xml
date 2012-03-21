@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FunctionTable>
+  <entry key="define_exception" value="関数 %s は既に定義されています"/>
+  <entry key="checkAllDefined_exception" value="関数 %s が定義されていません"/>
+</FunctionTable>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LeafCharsetDialog>
+  <entry key="title" value="文字セット"/>
+  <entry key="label_selected_codes" value="選択された文字セット"/>
+  <entry key="label_available_codes" value="選択可能な文字セット"/>
+  <entry key="button_add" value="追加"/>
+  <entry key="button_delete" value="削除"/>
+  <entry key="button_ok" value="OK"/>
+  <entry key="button_ok_action_error" value="最低でも1個以上選択してください。"/>
+  <entry key="button_cancel" value="キャンセル"/>
+</LeafCharsetDialog>

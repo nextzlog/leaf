@@ -1,9 +1,7 @@
 /**************************************************************************************
-月白プロジェクト Java 拡張ライブラリ 開発コードネーム「Leaf」
-始動：2010年6月8日
-バージョン：Edition 1.1
+ライブラリ「LeafAPI」 開発開始：2010年6月8日
 開発言語：Pure Java SE 6
-開発者：東大アマチュア無線クラブ 川勝孝也
+開発者：東大アマチュア無線クラブ
 ***************************************************************************************
 License Documents: See the license.txt (under the folder 'readme')
 Author: University of Tokyo Amateur Radio Club / License: GPL
@@ -21,10 +19,15 @@ import java.util.regex.Matcher;
 /**
 *言語セットを管理し、多言語化を実現するクラスです。
 *Leafの全てのクラスはこのクラスを利用して多言語化に対応します。
-*このクラスを利用することで効果的に多言語化を実現できます。
+*<br><br>
+*<b>このクラスはレガシーです。</b>LeafAPIの全てのクラスは
+*{@link LeafLocalizeManager}への迅速な移行が勧告されています。
+*
 *@author 東大アマチュア無線クラブ
 *@since Leaf 1.0 作成：2010年6月2日
+*@see LeafLocalizeManager
 */
+//@Deprecated
 public class LeafLangManager{
 	
 	/**使用する言語として英語を表します。*/
@@ -34,12 +37,13 @@ public class LeafLangManager{
 	/**英語・日本語以外の言語を表します。*/
 	public static final int LANG_ANOTHER = 2;
 	
-	/*秘匿フィールド*/
 	private static Properties prop = new Properties();
 	private static File file;
 	private static int lang = LANG_ENGLISH;
 	
 	private static final Pattern parg = Pattern.compile("[arg]", Pattern.LITERAL);
+	
+	private LeafLangManager(){}
 	
 	/**
 	*使用する言語を設定します。
@@ -102,8 +106,9 @@ public class LeafLangManager{
 		Matcher m = parg.matcher(get(eng, jpn));
 		StringBuffer sb = new StringBuffer();
 		for(Object arg : args){
+			String repl = Matcher.quoteReplacement(String.valueOf(arg));
 			if(m.find()){
-				m.appendReplacement(sb, arg.toString());
+				m.appendReplacement(sb, repl);
 				continue;
 			}
 			break;

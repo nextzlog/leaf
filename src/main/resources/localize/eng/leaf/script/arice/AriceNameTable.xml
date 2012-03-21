@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<AriceNameTable>
+  <entry key="createLocal_exception" value="%s is already declared."/>
+  <entry key="createParam_exception" value="%s is already declared."/>
+  <entry key="search_exception" value="%s is not declared."/>
+</AriceNameTable>

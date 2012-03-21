@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LeafColorDialog>
+  <entry key="title" value="Color Settings"/>
+  <entry key="button_ok" value="OK"/>
+  <entry key="button_cancel" value="Cancel"/>
+  <entry key="chooser_title" value="Select"/>
+</LeafColorDialog>

@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<AriceVirtualMachine>
+  <entry key="execute_exception_switch" value="中間言語設計上のバグ：処理系開発者に連絡してください"/>
+  <entry key="execute_exception_overflow" value="スタックオーバーフロー：関数の呼び出しが深すぎる可能性があります"/>
+</AriceVirtualMachine>

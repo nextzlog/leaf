@@ -1,269 +1,249 @@
 /**************************************************************************************
-月白プロジェクト Java 拡張ライブラリ 開発コードネーム「Leaf」
-始動：2010年6月8日
-バージョン：Edition 1.1
+ライブラリ「LeafAPI」 開発開始：2010年6月8日
 開発言語：Pure Java SE 6
-開発者：東大アマチュア無線クラブ 川勝孝也
+開発者：東大アマチュア無線クラブ
 ***************************************************************************************
 License Documents: See the license.txt (under the folder 'readme')
 Author: University of Tokyo Amateur Radio Club / License: GPL
 **************************************************************************************/
 package leaf.dialog;
 
-import java.awt.*;
+import java.awt.Dialog;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.FontMetrics;
+import java.awt.Frame;
+import java.awt.GraphicsEnvironment;
 import java.awt.event.*;
 import javax.swing.*;
-import javax.swing.event.*;
-import javax.swing.border.*;
+import javax.swing.border.EtchedBorder;
+import javax.swing.border.TitledBorder;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import javax.swing.text.Position.Bias;
 
-import leaf.manager.LeafLangManager;
-import leaf.components.text.LeafTextField;
+import leaf.swing.text.LeafTextField;
+
+import static java.awt.Font.*;
+import static javax.swing.ListSelectionModel.SINGLE_SELECTION;
 
 /**
-*フォント設定ダイアログです。
-*@author 東大アマチュア無線クラブ
-*@since Leaf 1.0 作成：2008年10月 改良：2010年5月22日
-*/
-public final class LeafFontDialog extends LeafDialog
-	implements ActionListener,ListSelectionListener,DocumentListener{
-	
-	/**秘匿フィールド*/
-	private Font font = new Font(Font.MONOSPACED,Font.PLAIN,13);
-	private String hist="";
-	private String[] sname;
-	private String[] sst;
-	private final String[] ssize = {
-		"8","9","10","11","12","13","14","15","16",
-		"18","20","22","24","26","28","36","48","72"
+ *フォント設定ダイアログをアプリケーション向けに提供します。
+ *
+ *@author 東大アマチュア無線クラブ
+ *@since Leaf 1.0 作成：2008年10月
+ */
+public final class LeafFontDialog extends LeafDialog{
+	private final GraphicsEnvironment ge;
+	private final Integer[] sizes = {
+		8,9,10,11,12,13,14,15,16,18,20,22,24,26,28,36,48,72
 	};
-	private GraphicsEnvironment ge;
+	private JLabel namelb, stylelb, sizelb, samplelb;
+	private JList namelist, stylelist, sizelist;
+	private LeafTextField namefld, stylefld, sizefld, pitchfld;
+	private JButton bok, bcancel;
+	private Font font = new Font(MONOSPACED, PLAIN, 13);
 	private boolean isChanged = CANCEL_OPTION;
-
-	/**GUI*/
-	private JLabel namelabel,stlabel,sizelabel,sample;
-	private JList namelist,stlist,sizelist;
-	private JScrollPane namesc,stsc,sizesc;
-	private LeafTextField namef,stf,sizef,exp;
-	private JButton bok,bcancel;
 	
 	/**
-	*親フレームを指定してフォント選択ダイアログを生成します。
-	*@param owner 親フレーム
-	*/
+	 *親フレームを指定してモーダルダイアログを生成します。
+	 *@param owner 親フレーム
+	 */
 	public LeafFontDialog(Frame owner){
-		
-		super(owner,null,true);
-		getContentPane().setPreferredSize(new Dimension(500,260));
-		pack();
+		super(owner, true);
+		setContentSize(new Dimension(500, 260));
 		setResizable(false);
+		
 		addWindowListener(new WindowAdapter(){
 			public void windowClosing(WindowEvent e){
 				isChanged = CANCEL_OPTION;
-				dispose();
 			}
 		});
 		setLayout(null);
-
-		init();
-	}
-	/**
-	*親ダイアログを指定してフォント選択ダイアログを生成します。
-	*@param owner 親フレーム
-	*/
-	public LeafFontDialog(Dialog owner){
-		
-		super(owner,null,true);
-		getContentPane().setPreferredSize(new Dimension(500,260));
-		pack();
-		setResizable(false);
-		addWindowListener(new WindowAdapter(){
-			public void windowClosing(WindowEvent e){
-				isChanged = CANCEL_OPTION;
-				dispose();
-			}
-		});
-		setLayout(null);
-
-		init();
-	}
-	/**
-	*ダイアログを初期化します。
-	*/
-	public void init(){
-		
-		setTitle(LeafLangManager.get("Font","フォント"));
-		
 		ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
-		sname = ge.getAvailableFontFamilyNames();
+		init();
+	}
+	/**
+	 *親ダイアログを指定してモーダルダイアログを生成します。
+	 *@param owner 親ダイアログ
+	 */
+	public LeafFontDialog(Dialog owner){
+		super(owner, true);
+		setContentSize(new Dimension(500, 260));
+		setResizable(false);
 		
-		String[] sst = {
-			LeafLangManager.get("Plain","標準"),
-			LeafLangManager.get("Italic","斜体"),
-			LeafLangManager.get("Bold","太字"),
-			LeafLangManager.get("Bold Italic","太字 斜体")
-		};
-		
+		addWindowListener(new WindowAdapter(){
+			public void windowClosing(WindowEvent e){
+				isChanged = CANCEL_OPTION;
+			}
+		});
+		setLayout(null);
+		ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+		init();
+	}
+	/**
+	 *ダイアログの表示と配置を初期化します。
+	 */
+	@Override public void init(){
+		setTitle(translate("title"));
 		getContentPane().removeAll();
 		
-		//サンプル
-		sample = new JLabel(
-			"<html><Font size=5>" + LeafLangManager.get("Aa Bb Cc","Aa あぁ アァ 亜宇"),
-			JLabel.CENTER
-		);
-		sample.setBounds(10,180,380,60);
-		add(sample);
+		/*font names*/
+		namelb = new JLabel(translate("label_font_name"));
+		namelb.setBounds(10, 5, 220, 20);
+		add(namelb);
 		
-		sample.setBorder(new TitledBorder(
-			new EtchedBorder(EtchedBorder.LOWERED),
-			LeafLangManager.get("Sample","サンプル")
-		));
-		add(sample);
+		namefld = new LeafTextField();
+		namefld.setBounds(10, 25, 220, 20);
+		add(namefld);
 		
-		//フォント名
-		namelabel = new JLabel(LeafLangManager.get("Name","フォント名"));
-		namelabel.setBounds(10,5,220,20);
-		add(namelabel);
-		namef = new LeafTextField();
-		namef.setBounds(10,25,220,20);
-		add(namef);
-		namelist = new JList(sname);
-		namesc = new JScrollPane(namelist);
-		namesc.setBounds(10,47,220,110);
-		namelist.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		namelist.addListSelectionListener(this);
-		namef.getDocument().addDocumentListener(this);
-		add(namesc);
+		namelist = new JList(ge.getAvailableFontFamilyNames());
+		namelist.setSelectionMode(SINGLE_SELECTION);
 		
-		//スタイル
-		stlabel = new JLabel(LeafLangManager.get("Style","スタイル"));
-		stlabel.setBounds(240,5,80,20);
-		add(stlabel);
-		stf = new LeafTextField();
-		stf.setBounds(240,25,80,20);
-		add(stf);
-		stlist = new JList(sst);
-		stsc = new JScrollPane(stlist);
-		stsc.setBounds(240,47,80,110);
-		stlist.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		stlist.addListSelectionListener(this);
-		stf.setEditable(false);
-		add(stsc);
+		JScrollPane scroll = new JScrollPane(namelist);
+		scroll.setBounds(10, 47, 220, 110);
+		add(scroll);
 		
-		//フォントサイズ
-		sizelabel = new JLabel(LeafLangManager.get("Size","サイズ"));
-		sizelabel.setBounds(330,5,60,20);
-		add(sizelabel);
-		sizef = new LeafTextField();
-		sizef.setBounds(330,25,60,20);
-		add(sizef);
-		sizelist = new JList(ssize);
-		sizesc = new JScrollPane(sizelist);
-		sizesc.setBounds(330,47,60,88);
-		sizelist.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		sizelist.addListSelectionListener(this);
-		sizef.setEditable(false);
-		add(sizesc);
+		namelist.addListSelectionListener(new ListSelectionListener(){
+			public void valueChanged(ListSelectionEvent e){
+				String name = (String) namelist.getSelectedValue();
+				if(namelist.hasFocus()) namefld.setText(name);
+				update(new Font(name, font.getStyle(), font.getSize()));
+			}
+		});
 		
-		//説明
-		exp = new LeafTextField();
-		exp.setBounds(330,137,60,20);
-		exp.setEditable(false);
-		add(exp);
-				
-		//ボタン
-		bok = new JButton("OK");
-		bok.setBounds(400,25,100,22);
-		bok.addActionListener(this);
+		namefld.addKeyListener(new KeyAdapter(){
+			public void keyPressed(KeyEvent e){
+				String name = namefld.getText();
+				if(font.getName().equals(name)) return;
+				int index = namelist.getNextMatch(name, 0, Bias.Forward);
+				if(index >= 0){
+					namelist.setSelectedIndex(index);
+					namelist.ensureIndexIsVisible(index);
+				}
+			}
+		});
+		
+		/*font styles*/
+		stylelb = new JLabel(translate("label_font_style"));
+		stylelb.setBounds(240, 5, 80, 20);
+		add(stylelb);
+		
+		stylefld = new LeafTextField();
+		stylefld.setBounds(240, 25, 80, 20);
+		stylefld.setEditable(false);
+		add(stylefld);
+		
+		DefaultListModel model = new DefaultListModel();
+		model.addElement(translate("font_style_plain"));
+		model.addElement(translate("font_style_bold"));
+		model.addElement(translate("font_style_italic"));
+		model.addElement(translate("font_style_bold_italic"));
+		
+		stylelist = new JList(model);
+		stylelist.setSelectionMode(SINGLE_SELECTION);
+		
+		scroll = new JScrollPane(stylelist);
+		scroll.setBounds(240, 47, 80, 110);
+		add(scroll);
+		
+		stylelist.addListSelectionListener(new ListSelectionListener(){
+			public void valueChanged(ListSelectionEvent e){
+				int index = stylelist.getSelectedIndex();
+				stylefld.setText((String)stylelist.getSelectedValue());
+				update(font.deriveFont(index));
+			}
+		});
+		
+		/*font size*/
+		sizelb = new JLabel(translate("label_font_size"));
+		sizelb.setBounds(330, 5, 60, 20);
+		add(sizelb);
+		
+		sizefld = new LeafTextField();
+		sizefld.setBounds(330, 25, 60, 20);
+		sizefld.setEditable(false);
+		add(sizefld);
+		
+		sizelist = new JList(sizes);
+		sizelist.setSelectionMode(SINGLE_SELECTION);
+		
+		scroll = new JScrollPane(sizelist);
+		scroll.setBounds(330, 47, 60, 88);
+		add(scroll);
+		
+		sizelist.addListSelectionListener(new ListSelectionListener(){
+			public void valueChanged(ListSelectionEvent e){
+				Integer size = (Integer)sizelist.getSelectedValue();
+				sizefld.setText(String.valueOf(size));
+				update(font.deriveFont(size.floatValue()));
+			}
+		});
+		
+		/*monospace or not*/
+		pitchfld = new LeafTextField();
+		pitchfld.setBounds(330, 137, 60, 20);
+		pitchfld.setEditable(false);
+		add(pitchfld);
+		
+		/*font samble*/
+		samplelb = new JLabel(translate("label_font_sample"), JLabel.CENTER);
+		samplelb.setBounds(10, 180, 380, 60);
+		add(samplelb);
+		
+		samplelb.setBorder(new TitledBorder(new EtchedBorder(
+			EtchedBorder.LOWERED), translate("label_font_sample_title")));
+		
+		/*ok button*/
+		bok = new JButton(translate("button_ok"));
+		bok.setBounds(400, 25, 100, 22);
 		add(bok);
-		bcancel = new JButton(LeafLangManager.get("Cancel","キャンセル"));
-		bcancel.setBounds(400,49,100,22);
-		bcancel.addActionListener(this);
+		
+		bok.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent e){
+				isChanged = OK_OPTION;
+				dispose();
+			}
+		});
+		
+		/*cancel button*/
+		bcancel = new JButton(translate("button_cancel"));
+		bcancel.setBounds(400, 49, 100, 22);
 		add(bcancel);
+		
+		bcancel.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent e){
+				isChanged = CANCEL_OPTION;
+				dispose();
+			}
+		});
 	}
 	/**
-	*フォントファミリ・字体・サイズの選択が変更されたときに呼び出されます。
+	*フォントの変更時に表示を更新します。
+	*@param font 新しいフォント
 	*/
-	public void valueChanged(ListSelectionEvent e){
-		Object obj = e.getSource();
-		if(obj == namelist){
-			namef.setText((String)(namelist.getSelectedValue()));
-			font = new Font(
-				(String)(namelist.getSelectedValue()),
-				font.getStyle(),
-				font.getSize()
-			);
-		}else if(obj == stlist){
-			stf.setText((String)(stlist.getSelectedValue()));
-			int si = stlist.getSelectedIndex();
-			if(si==0)font = new Font(font.getFamily(),Font.PLAIN,font.getSize());
-			else if(si==1)font = new Font(font.getFamily(),Font.ITALIC,font.getSize());
-			else if(si==2)font = new Font(font.getFamily(),Font.BOLD,font.getSize());
-			else font = new Font(font.getFamily(),Font.ITALIC|Font.BOLD,font.getSize());
+	private void update(Font font){
+		this.font = font;
+		samplelb.setFont(font.deriveFont(24f));
+		FontMetrics met = samplelb.getFontMetrics(font);
+		if(met.charWidth('m') == met.charWidth('i')){
+			pitchfld.setText(translate("pitch_fixed"));
 		}else{
-			sizef.setText((String)(sizelist.getSelectedValue()));
-			font = new Font(
-				font.getFamily(),
-				font.getStyle(),
-				Integer.parseInt((String)(sizelist.getSelectedValue()))
-			);
+			pitchfld.setText(translate("pitch_unfixed"));
 		}
-		sample.setFont(font);
-		exp.setText(
-			(getFontMetrics(font).charWidth('m')==getFontMetrics(font).charWidth('l'))?
-			LeafLangManager.get("Fixed","等幅"):LeafLangManager.get("Unfixed","非等幅"));
-	}
-	public void actionPerformed(ActionEvent e){
-		Object obj = e.getSource();
-		if(obj == bok)isChanged = OK_OPTION;
-		else isChanged = CANCEL_OPTION;
-		dispose();
-	}
-	public void changedUpdate(DocumentEvent e){}
-	public void insertUpdate(DocumentEvent e){update(e);}
-	public void removeUpdate(DocumentEvent e){update(e);}
-	private void update(DocumentEvent e){
-		try{
-			if(!namef.getText().equalsIgnoreCase(hist)){
-				int index = namelist.getNextMatch((hist=namef.getText()),0,Bias.Forward);
-				namelist.setSelectedIndex(index);
-				namelist.ensureIndexIsVisible(index);
-				font = new Font(
-					(String)(namelist.getSelectedValue()),
-					font.getStyle(),
-					font.getSize()
-				);
-				sample.setFont(font);
-				FontMetrics met = getFontMetrics(font);
-				exp.setText(
-					(met.charWidth('m')==met.charWidth('l'))?
-					LeafLangManager.get("Fixed","等幅"):
-					LeafLangManager.get("Unfixed","非等幅")
-				);
-			}namelist.repaint();
-		}catch(Exception ex){}
 	}
 	/**
-	*フォント設定画面をモーダルで表示します。<br>
-	*{@link LeafDialog#setVisible(boolean)}は使用すべきではありません。
+	*フォント設定画面をモーダルで表示します。
 	*@param font デフォルトのフォント
-	*@return 選択されたフォント
+	*@return 選択されたフォント キャンセルされた場合null
 	*/
 	public Font showDialog(Font font){
 		this.font = font;
-		namelist.setSelectedValue(font.getFamily(),false);
-		namef.setText(font.getFamily());
-		String fs;
-		if(font.getStyle()==Font.PLAIN)fs=LeafLangManager.get("Plain","標準");
-		else if(font.getStyle()==Font.ITALIC)fs=LeafLangManager.get("Italic","斜体");
-		else if(font.getStyle()==Font.BOLD)fs=LeafLangManager.get("Bold","太字");
-		else fs=LeafLangManager.get("Bold Italic","太字 斜体");
-		stf.setText(fs);
-		stlist.setSelectedValue(fs,true);
-		sizef.setText(""+font.getSize());
-		sizelist.setSelectedValue(String.valueOf(font.getSize()),true);
-		super.setVisible(true);
-		if(isChanged==OK_OPTION)return this.font;
-		else return font;//そのまま返す
+		namefld.setText(font.getFamily());
+		namelist.setSelectedValue(font.getFamily(), true);
+		stylelist.setSelectedIndex(font.getStyle());
+		sizelist.setSelectedValue(font.getSize(), true);
+		setVisible(true);
+		return (isChanged == OK_OPTION)? this.font : null;
 	}
 }

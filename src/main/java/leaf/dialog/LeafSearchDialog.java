@@ -1,165 +1,127 @@
 /**************************************************************************************
-月白プロジェクト Java 拡張ライブラリ 開発コードネーム「Leaf」
-始動：2010年6月8日
-バージョン：Edition 1.1
+ライブラリ「LeafAPI」 開発開始：2010年6月8日
 開発言語：Pure Java SE 6
-開発者：東大アマチュア無線クラブ 川勝孝也
+開発者：東大アマチュア無線クラブ
 ***************************************************************************************
 License Documents: See the license.txt (under the folder 'readme')
 Author: University of Tokyo Amateur Radio Club / License: GPL
 **************************************************************************************/
 package leaf.dialog;
 
-import java.awt.*;
+import java.awt.Dialog;
+import java.awt.Dimension;
+import java.awt.Frame;
 import java.awt.event.*;
-import java.util.regex.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 import javax.swing.*;
-import javax.swing.border.*;
-import javax.swing.text.*;
-
-import leaf.manager.LeafLangManager;
+import javax.swing.border.EtchedBorder;
+import javax.swing.border.TitledBorder;
+import javax.swing.text.JTextComponent;
 
 /**
-*テキスト領域用の検索ダイアログです。
-*@author 東大アマチュア無線クラブ
-*@since Leaf 1.0 作成；2010年5月22日 正規表現対応：2010年9月8日
-*@see LeafSearchDialog
-*@see LeafGrepDialog
-*/
+ *{@link JTextComponent}向けに文字列検索ダイアログを提供します。
+ *
+ *@author 東大アマチュア無線クラブ
+ *@since Leaf 1.0 作成；2010年5月22日 正規表現対応：2010年9月8日
+ *@see LeafReplaceDialog
+ */
 public final class LeafSearchDialog extends LeafDialog{
-	
-	/**GUI*/
-	private JComboBox scomb;
-	private JLabel slb;
-	private JCheckBox casech,regch,dotch;
-	private JRadioButton upwardrb,downwardrb;
-	private JButton bnext,bfirst,bexit;
-	
+	private JCheckBox casech, regch, dotch;
+	private JComboBox srchcomb;
+	private JLabel srchlb;
+	private JRadioButton uprb, downrb;
+	private JButton bnext, bfirst, bclose;
 	private Matcher matcher;
-	private JTextComponent component;
+	private JTextComponent comp;
+	private final int HISTORY_MAX = 30;
 	
-	private final int HISTORY_MAX = 20;
-	private final int SEARCH_UPWARD = 0, SEARCH_DOWNWARD = 1;
-	private final int SEARCH_FIRST  = 2, SEARCH_LAST= 3;
 	/**
-	*親フレームを指定してモーダレスな検索ダイアログを生成します。
-	*@param owner 親フレーム
-	*/
+	 *親フレームを指定してモーダレスダイアログを生成します。
+	 *@param owner 親フレーム
+	 */
 	public LeafSearchDialog(Frame owner){
-		super(owner,null,false);
-		setLayout(null);
-		getContentPane().setPreferredSize(new Dimension(480,100));
-		pack();
+		super(owner, false);
+		setContentSize(new Dimension(480, 100));
 		setResizable(false);
-		addWindowListener( new WindowAdapter(){
-			public void windowClosing(WindowEvent e){
-				dispose();
-			}
-		});
-
+		setLayout(null);
 		init();
+		
+		addComponentListener(new ExComponentListener());
 	}
 	/**
-	*親ダイアログを指定してモーダレスな検索ダイアログを生成します。
-	*@param owner
-	*/
+	 *親ダイアログを指定してモーダレスダイアログを生成します。
+	 *@param owner 親ダイアログ
+	 */
 	public LeafSearchDialog(Dialog owner){
-		super(owner,null,false);
-		setLayout(null);
-		getContentPane().setPreferredSize(new Dimension(480,100));
-		pack();
+		super(owner, false);
+		setContentSize(new Dimension(480, 100));
 		setResizable(false);
-		addWindowListener( new WindowAdapter(){
-			public void windowClosing(WindowEvent e){
-				dispose();
-			}
-		});
-
+		setLayout(null);
 		init();
-	}
-	/**
-	*検索対象のテキストコンポーネントを指定して検索ダイアログを表示します。
-	*@param component 検索操作対象のテキスト領域
-	*/
-	public void showDialog(JTextComponent component){
-		this.component = component;
-		setVisible(true);
-	}
-	/**
-	*検索対象のテキストコンポーネントを設定します。
-	*@param component 検索操作対象のテキスト領域
-	*/
-	public void setTextComponent(JTextComponent component){
-		this.component = component;
-	}
-	/**
-	*現在の検索キーワードを返します。
-	*@return 最後に入力された検索文字列
-	*/
-	public String getSearchText(){
-		return matcher.pattern().pattern();
-	}
-	/**
-	*検索キーワードを設定します。
-	*@param text 検索文字列
-	*/
-	public void setSearchText(String text){
-		addItem(scomb,text);
-	}
-	/**
-	*ダイアログを表示することなく「次を検索」を実行します。
-	*@param component 検索操作対象のテキスト領域
-	*/
-	public void searchNext(JTextComponent component){
-		start(SEARCH_DOWNWARD);
-	}
-	/**
-	*ダイアログを表示することなく「前を検索」を実行します。
-	*@param component 検索操作対象のテキスト領域
-	*/
-	public void searchPrevious(JTextComponent component){
-		start(SEARCH_UPWARD);
-	}
-	/**
-	*検索ダイアログを初期化します。{@link LeafLangManager}による
-	*言語指定が更新されていた場合、使用言語にも反映されます。
-	*/
-	public void init(){
 		
-		setTitle(LeafLangManager.get("Search","検索"));
-		
+		addComponentListener(new ExComponentListener());
+	}
+	/**
+	 *ダイアログが表示された際の動作を指定します。
+	 */
+	private class ExComponentListener extends ComponentAdapter{
+		public void componentShown(ComponentEvent e){
+			if(comp != null){
+				addItem(srchcomb, comp.getSelectedText());
+			}
+		}
+	}
+	/**
+	 *操作対象のコンポーネントを指定します。
+	 *@param comp 検索/置換対象のテキストコンポーネント
+	 */
+	public void setTextComponent(JTextComponent comp){
+		this.comp = comp;
+	}
+	/**
+	 *操作対象のコンポーネントを返します。
+	 *@return 検索/置換対象のテキストコンポーネント
+	 */
+	public JTextComponent getTextComponent(){
+		return comp;
+	}
+	/**
+	 *ダイアログの表示と配置を初期化します。
+	 */
+	@Override public void init(){
+		setTitle(translate("title"));
 		getContentPane().removeAll();
 		
-		/*検索条件*/
-		slb = new JLabel(LeafLangManager.get("Search","検索語"));
-		slb.setBounds(5,10,45,20);
-		add(slb);
+		/*search pattern*/
+		srchlb = new JLabel(translate("label_pattern"));
+		srchlb.setBounds(5, 10, 50, 20);
+		add(srchlb);
 		
-		scomb = new JComboBox();
-		scomb.setEditable(true);
-		scomb.setBounds(50,10,315,20);
-		add(scomb);
+		srchcomb = new JComboBox();
+		srchcomb.setEditable(true);
+		srchcomb.setBounds(55, 10, 310, 20);
+		add(srchcomb);
 		
-		scomb.getEditor().addActionListener(new ActionListener(){
+		srchcomb.getEditor().addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e){
-				start((downwardrb.isSelected())?SEARCH_DOWNWARD:SEARCH_UPWARD);
+				search((downrb.isSelected())?
+					SEARCH_DOWNWARD : SEARCH_UPWARD);
 			}
 		});
 		
-		/*大文字と小文字を区別*/
-		casech = new JCheckBox(LeafLangManager.get(
-			"Case Sensitive","大文字と小文字を区別(C)"),true
-		);
-		casech.setBounds(5,40,190,20);
+		/*case sensitive*/
+		casech = new JCheckBox(translate("check_case_sensitive"));
+		casech.setBounds(5, 40, 190, 20);
 		casech.setMnemonic(KeyEvent.VK_C);
 		add(casech);
 		
-		/*正規表現*/
-		regch = new JCheckBox(LeafLangManager.get(
-			"Regex Search","正規表現検索(R)"),true
-		);
-		regch.setBounds(5,60,190,20);
-		regch.setMnemonic(KeyEvent.VK_R);
+		/*regex search*/
+		regch = new JCheckBox(translate("check_regex"));
+		regch.setBounds(5, 60, 190, 20);
+		regch.setMnemonic(KeyEvent.VK_G);
+		regch.setSelected(true);
 		add(regch);
 		
 		regch.addActionListener(new ActionListener(){
@@ -168,177 +130,157 @@ public final class LeafSearchDialog extends LeafDialog{
 			}
 		});
 		
-		/*DOTALL*/
-		dotch = new JCheckBox(LeafLangManager.get(
-			"DOTALL MODE","DOTALLモード"
-		));
-		dotch.setBounds(5,80,190,20);
+		/*dotall*/
+		dotch = new JCheckBox(translate("check_dotall"));
+		dotch.setBounds(5, 80, 190, 20);
 		dotch.setMnemonic(KeyEvent.VK_O);
 		add(dotch);
 		
-		/*検索する方向*/
+		/*search direction*/
 		JPanel panel = new JPanel(null);
-		panel.setBorder(new TitledBorder(
-			new EtchedBorder(EtchedBorder.LOWERED),
-			LeafLangManager.get("Direction","検索方向")
-		));
-		panel.setBounds(195,45,170,50);
+		panel.setBorder(new TitledBorder(new EtchedBorder(
+			EtchedBorder.LOWERED), translate("panel_direction")));
+		panel.setBounds(195, 45, 170, 50);
 		add(panel);
 		ButtonGroup group = new ButtonGroup();
 		
-		upwardrb = new JRadioButton(
-			LeafLangManager.get("Upward","上方(U)"));
-		upwardrb.setBounds(5,20,80,20);
-		upwardrb.setMnemonic(KeyEvent.VK_U);
-		panel.add(upwardrb);
-		group.add(upwardrb);
+		uprb = new JRadioButton(translate("radio_direction_up"));
+		uprb.setBounds(5, 20, 80, 20);
+		uprb.setMnemonic(KeyEvent.VK_U);
+		panel.add(uprb);
+		group.add(uprb);
 		
-		downwardrb = new JRadioButton(
-			LeafLangManager.get("Downward","下方(D)"),true);
-		downwardrb.setBounds(85,20,80,20);
-		downwardrb.setMnemonic(KeyEvent.VK_D);
-		panel.add(downwardrb);
-		group.add(downwardrb);
+		downrb = new JRadioButton(translate("radio_direction_down"));
+		downrb.setBounds(85, 20, 80, 20);
+		downrb.setMnemonic(KeyEvent.VK_D);
+		downrb.setSelected(true);
+		panel.add(downrb);
+		group.add(downrb);
 		
-		/*次を検索*/
-		bnext = new JButton(LeafLangManager.get("Next","次を検索(N)"));
-		bnext.setBounds(380,10,100,22);
+		/*button : search next*/
+		bnext = new JButton(translate("button_find_next"));
+		bnext.setBounds(380, 10, 100, 22);
 		bnext.setMnemonic(KeyEvent.VK_N);
 		add(bnext);
 		
 		bnext.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e){
-				start((downwardrb.isSelected())?SEARCH_DOWNWARD:SEARCH_UPWARD);
+				search((downrb.isSelected())?
+					SEARCH_DOWNWARD : SEARCH_UPWARD);
 			}
 		});
 		
-		/*先頭検索*/
-		bfirst = new JButton(LeafLangManager.get("First","先頭検索(F)"));
-		bfirst.setBounds(380,35,100,22);
+		/*button : search first*/
+		bfirst = new JButton(translate("button_find_first"));
+		bfirst.setBounds(380, 35, 100, 22);
 		bfirst.setMnemonic(KeyEvent.VK_F);
 		add(bfirst);
 		
 		bfirst.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e){
-				start((downwardrb.isSelected())?SEARCH_FIRST:SEARCH_LAST);
+				search((downrb.isSelected())?
+					SEARCH_FIRST : SEARCH_LAST);
 			}
 		});
 		
-		/*閉じる*/
-		bexit = new JButton(LeafLangManager.get("Exit","閉じる(X)"));
-		bexit.setBounds(380,78,100,22);
-		bexit.setMnemonic(KeyEvent.VK_X);
-		add(bexit);
+		/*button : close dialog*/
+		bclose = new JButton(translate("button_close"));
+		bclose.setBounds(380, 78, 100, 22);
+		bclose.setMnemonic(KeyEvent.VK_C);
+		add(bclose);
 		
-		bexit.addActionListener(new ActionListener(){
+		bclose.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e){
 				dispose();
 			}
 		});
-		
-		repaint();
 	}
-	/**検索パターンを更新*/
-	private void updatePattern(){
+	/**
+	 *検索パターンを更新します。
+	 *@param isLiteralMode 正規表現検索を無効にする場合true
+	 */
+	private void updatePattern(boolean isLiteralMode){
 		int opt = 0;
 		if(!casech.isSelected()){
-			opt = opt | Pattern.UNICODE_CASE | Pattern.CASE_INSENSITIVE;
-		}
-		if(!regch.isSelected()){
-			opt = opt | Pattern.LITERAL;
-		}
-		if(dotch.isSelected()){
-			opt = opt | Pattern.DOTALL;
-		}
-		try{
-			Pattern pattern = Pattern.compile(getText(scomb),opt);
-			matcher = pattern.matcher(component.getText());
-		}catch(Exception ex){
-			showMessage(LeafLangManager.get(
-				"Pattern Syntax Error","検索パターンの構文が不正です"
-			));
+			opt |= Pattern.UNICODE_CASE;
+			opt |= Pattern.CASE_INSENSITIVE;
+		}if(dotch.isSelected()){
+			opt |= Pattern.DOTALL;
+		}try{
+			if(isLiteralMode) opt |= Pattern.LITERAL;
+			Pattern pat = Pattern.compile(getText(srchcomb), opt);
+			matcher = pat.matcher(comp.getText());
+		}catch(PatternSyntaxException ex){
+			showMessage(ex.getDescription());
 			matcher = null;
 		}
 	}
-	/**検索方向を指定して検索を開始する*/
-	private void start(int ward){
-		
-		if(getText(scomb).length()==0)return;
-		addItem(scomb,getText(scomb));
-		if(!search(ward)){
-			showMessage(LeafLangManager.translate(
-				"Not found \"[arg]\" [arg].",
-				"「[arg]」が[arg]見つかりません",
-				getText(scomb), getOrientText(ward)
-			));
-		}
-	}
-	/**検索方向を表す文字列を返す*/
-	private String getOrientText(int ward){
-		switch(ward){
-			case SEARCH_UPWARD:
-				return LeafLangManager.get("upward","前方に");
-			case SEARCH_DOWNWARD:
-				return LeafLangManager.get("downward","後方に");
-			case SEARCH_FIRST:
-				return LeafLangManager.get("at all","全く");
-			case SEARCH_LAST:
-				return LeafLangManager.get("at all","全く");
-			default:
-				return null;
-		}
-	}
-	/**検索方向を指定して検索*/
-	private boolean search(int ward){
-		updatePattern();
-		component.requestFocusInWindow();
-		try{
+	/**
+	 *検索方向を指定して検索を開始します。
+	 *@param ward 検索方向
+	 *@return 見つかった場合true
+	 */
+	public boolean search(int ward){
+		String pat = getText(srchcomb);
+		if(pat.isEmpty()){
+			showMessage(translate("search_pattern_empty"));
+			return false;
+		}else{
+			addItem(srchcomb, getText(srchcomb));
+			updatePattern(!regch.isSelected());
+			comp.requestFocusInWindow();
 			switch(ward){
-				case SEARCH_UPWARD:
-					return searchUpward(component.getSelectionStart());
-				case SEARCH_DOWNWARD:
-					return searchDownward(component.getSelectionEnd());
-				case SEARCH_FIRST:
-					return searchDownward(0);
-				case SEARCH_LAST:
-					return searchUpward(-1);
-				default:
-					return false;
+			case SEARCH_UPWARD:
+				return searchUpward(comp.getSelectionStart());
+			case SEARCH_DOWNWARD:
+				return searchDownward(comp.getSelectionEnd());
+			case SEARCH_FIRST:
+				return searchDownward(0);
+			case SEARCH_LAST:
+				return searchUpward(-1);
 			}
-		}catch(Exception ex){
-			ex.printStackTrace();
 			return false;
 		}
 	}
-	/**前方検索(positionが負の場合末尾検索)*/
+	/**
+	 *前方を検索します。
+	 *@param position 検索開始位置 負の場合末尾検索
+	 *@return 見つかった場合true
+	 */
 	private boolean searchUpward(int position){
-		if(matcher==null)return true;
+		if(matcher == null) return true;
 		boolean found = false;
 		int start = 0, end = 0;
 		while(matcher.find(end)){
 			if(matcher.end() <= position
-			&& component.getSelectionStart()!=matcher.start()){
+			&& comp.getSelectionStart() != matcher.start()){
 				start = matcher.start();
-				end   = matcher.end();
+				end = matcher.end();
 				found = true;
 			}else if(position < 0){
 				start = matcher.start();
 				end   = matcher.end();
 				found = true;
-			}else{
-				break;
-			}
+			}else break;
 		}
-		component.select(start,end);
+		if(found) comp.select(start, end);
+		else{
+			showMessage(translate("not_found", getText(srchcomb)));
+		}
 		return found;
 	}
-	/**後方検索*/
+	/**
+	 *後方を検索します。
+	 *@param position 検索開始位置
+	 *@return 見つかった場合true
+	 */
 	private boolean searchDownward(int position){
-		if(matcher==null)return true;
+		if(matcher == null) return true;
 		if(matcher.find(position)){
-			component.select(matcher.start(),matcher.end());
+			comp.select(matcher.start(), matcher.end());
 			return true;
 		}else{
+			showMessage(translate("not_found", getText(srchcomb)));
 			return false;
 		}
 	}
@@ -347,14 +289,23 @@ public final class LeafSearchDialog extends LeafDialog{
 		return (String)combo.getEditor().getItem();
 	}
 	/**コンボボックスに追加*/
-	private void addItem(JComboBox combo,String str){
-		if(str==null||str.length()==0) return;
-		DefaultComboBoxModel model = (DefaultComboBoxModel)combo.getModel();
+	private void addItem(JComboBox combo, String str){
+		if(str==null||str.isEmpty()) return;
+		DefaultComboBoxModel model =
+		(DefaultComboBoxModel)combo.getModel();
 		model.removeElement(str);
-		model.insertElementAt(str,0);
+		model.insertElementAt(str, 0);
 		if(model.getSize()>HISTORY_MAX){
 			model.removeElementAt(HISTORY_MAX);
 		}
 		combo.setSelectedIndex(0);
 	}
+	/**前方を検索します。*/
+	public static final int SEARCH_UPWARD   = 0;
+	/**後方を検索します。*/
+	public static final int SEARCH_DOWNWARD = 1;
+	/*+先頭を検索します。*/
+	public static final int SEARCH_FIRST = 2;
+	/**末尾を検索します。*/
+	public static final int SEARCH_LAST  = 3;
 }

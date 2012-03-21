@@ -1,15 +1,10 @@
 /**************************************************************************************
-月白プロジェクト Java 拡張ライブラリ 開発コードネーム「Leaf」
-始動：2010年6月8日
-バージョン：Edition 1.1
+ライブラリ「LeafAPI」 開発開始：2010年6月8日
 開発言語：Pure Java SE 6
-開発者：東大アマチュア無線クラブ 川勝孝也
+開発者：東大アマチュア無線クラブ
 ***************************************************************************************
 License Documents: See the license.txt (under the folder 'readme')
 Author: University of Tokyo Amateur Radio Club / License: GPL
-***************************************************************************************
-flgdis:labelの表示値が何を示しているか / flgnum:numに値が入っているか
-total:計算の結果数値 / dis:表示値 / memo:メモリ / dnm:分母 / nmr:分子
 **************************************************************************************/
 package leaf.dialog;
 
@@ -19,57 +14,53 @@ import java.awt.Dimension;
 import java.awt.Frame;
 import java.awt.event.*;
 import java.nio.charset.Charset;
-import java.util.ArrayList;
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
 import leaf.manager.LeafCharsetManager;
-import leaf.manager.LeafLangManager;
 
 /**
-*システムで利用可能な文字コードのリストから、
-*使用する文字コードのリストを設定するダイアログです。
-*
-*@author 東大アマチュア無線クラブ
-*@since Leaf 1.1 作成 2010年11月13日
-*@see LeafCharsetManager
-*/
+ *実行環境で利用可能な文字コードのリストから、
+ *使用する文字コードのリストを設定するダイアログです。
+ *
+ *@author 東大アマチュア無線クラブ
+ *@since Leaf 1.1 作成 2010年11月13日
+ *@see LeafCharsetManager
+ */
 public final class LeafCharsetDialog extends LeafDialog{
-	
 	private JList uselist,usablelist;
 	private JLabel uselb,usablelb;
 	private JButton badd,bdel,bok,bcancel;
-	
 	private DefaultListModel usemodel, usablemodel;
-	
 	private boolean isApproved = CANCEL_OPTION;
 	
 	/**
-	*デフォルトで何も選択されていない設定ダイアログを生成します。
+	*親フレームを指定して設定ダイアログを生成します。
 	*@param owner 親フレーム
 	*/
 	public LeafCharsetDialog(Frame owner){
-		this(owner, null);
+		super(owner, true);
+		
+		setContentSize(new Dimension(420, 270));
+		setResizable(false);
+		
+		addWindowListener(new WindowAdapter(){
+			public void windowClosing(WindowEvent e){
+				isApproved = CANCEL_OPTION;
+			}
+		});
+		setLayout(null);
+		init();
 	}
 	/**
-	*デフォルトで何も選択されていない設定ダイアログを生成します。
+	*親ダイアログを指定して設定ダイアログを生成します。
 	*@param owner 親ダイアログ
 	*/
 	public LeafCharsetDialog(Dialog owner){
-		this(owner, null);
-	}
-	/**
-	*デフォルトの文字セット名を指定して設定ダイアログを生成します。
-	*@param owner 親フレーム
-	*@param names 文字セット名のリスト
-	*/
-	public LeafCharsetDialog(Frame owner, ArrayList<String> names){
+		super(owner, true);
 		
-		super(owner,LeafLangManager.get("Character Code","文字コード"),true);
-		setLayout(null);
-		getContentPane().setPreferredSize(new Dimension(420,270));
-		pack();
+		setContentSize(new Dimension(420, 270));
 		setResizable(false);
 		
 		addWindowListener(new WindowAdapter(){
@@ -77,29 +68,8 @@ public final class LeafCharsetDialog extends LeafDialog{
 				isApproved = CANCEL_OPTION;
 			}
 		});
-		
-		init(names);
-	}
-	/**
-	*デフォルトの文字セット名を指定して設定ダイアログを生成します。
-	*@param owner 親ダイアログ
-	*@param names 文字セット名のリスト
-	*/
-	public LeafCharsetDialog(Dialog owner, ArrayList<String> names){
-		
-		super(owner,LeafLangManager.get("Character Code","文字コード"),true);
 		setLayout(null);
-		getContentPane().setPreferredSize(new Dimension(420,270));
-		pack();
-		setResizable(false);
-		
-		addWindowListener(new WindowAdapter(){
-			public void windowClosing(WindowEvent e){
-				isApproved = CANCEL_OPTION;
-			}
-		});
-		
-		init(names);
+		init();
 	}
 	/**
 	*使用できる文字セットを追加したリストモデルを生成します。
@@ -107,24 +77,9 @@ public final class LeafCharsetDialog extends LeafDialog{
 	*/
 	private DefaultListModel createUsableModel(){
 		DefaultListModel model = new DefaultListModel();
-		String [] usable = LeafCharsetManager.availableCharsets();
+		Charset[] usable = LeafCharsetManager.availableCharsets();
 		for(int i=0;i<usable.length;i++){
 			model.add(i,usable[i]);
-		}
-		return model;
-	}
-	/**
-	*選択する文字セットを追加したリストモデルを生成します。
-	*@param names 文字セット名
-	*@return リストモデル
-	*/
-	private DefaultListModel createUseModel(ArrayList<String> names){
-		DefaultListModel model = new DefaultListModel();
-		if(names!=null){
-			int length = names.size();
-			for(int i=0;i<length;i++){
-				model.add(i,names.get(i));
-			}
 		}
 		return model;
 	}
@@ -167,33 +122,40 @@ public final class LeafCharsetDialog extends LeafDialog{
 		return isApproved;
 	}
 	/**
-	*選択されている文字セット名のリストを返します。
-	*@return 文字セット名のリスト
+	*選択されている文字セットの一覧を設定します。
+	*@param chsets 文字セットの配列
 	*/
-	public ArrayList<String> getSelectedCharsets(){
-		int length = usemodel.getSize();
-		ArrayList<String> list = new ArrayList<String>(length);
-		for(int i=0;i<length;i++){
-			list.add((String)usemodel.get(i));
+	public void setSelectedCharsets(Charset[] chsets){
+		usemodel.clear();
+		for(Charset chset : chsets){
+			usemodel.addElement(chset);
 		}
-		return list;
 	}
 	/**
-	*ダイアログを初期化します。
-	*@param names 文字セット名のリスト
+	*選択されている文字セットの一覧を返します。
+	*@return 文字セットの配列
 	*/
-	public void init(ArrayList<String> names){
-		
+	public Charset[] getSelectedCharsets(){
+		int length = usemodel.getSize();
+		Charset[] chsets = new Charset[length];
+		for(int i=0;i<length;i++){
+			chsets[i] = (Charset)usemodel.get(i);
+		}
+		return chsets;
+	}
+	/**
+	*ダイアログの表示と配置を初期化します。
+	*/
+	@Override public void init(){
+		setTitle(translate("title"));
 		getContentPane().removeAll();
 		
 		/*選択された文字コード*/
-		uselb = new JLabel(
-			LeafLangManager.get("Selected Codes","選択された文字コード")
-		);
+		uselb = new JLabel(translate("label_selected_codes"));
 		uselb.setBounds(5,10,160,20);
 		add(uselb);
 		
-		uselist = new JList(usemodel = createUseModel(names));
+		uselist = new JList(usemodel = new DefaultListModel());
 		uselist.addListSelectionListener(new ListSelectionListener(){
 			public void valueChanged(ListSelectionEvent e){
 				bdel.setEnabled(usemodel.getSize()>0);
@@ -205,9 +167,7 @@ public final class LeafCharsetDialog extends LeafDialog{
 		add(scroll);
 		
 		/*使用する文字コード*/
-		usablelb = new JLabel(
-			LeafLangManager.get("Usable Codes","使用できる文字コード")
-		);
+		usablelb = new JLabel(translate("label_available_codes"));
 		usablelb.setBounds(255,10,160,20);
 		add(usablelb);
 		
@@ -226,7 +186,7 @@ public final class LeafCharsetDialog extends LeafDialog{
 		add(scroll);
 		
 		/*追加*/
-		badd = new JButton(LeafLangManager.get("Add","追加"));
+		badd = new JButton(translate("button_add"));
 		badd.setBounds(170,120,80,22);
 		badd.setEnabled(false);
 		add(badd);
@@ -238,7 +198,7 @@ public final class LeafCharsetDialog extends LeafDialog{
 		});
 		
 		/*削除*/
-		bdel = new JButton(LeafLangManager.get("Del","削除"));
+		bdel = new JButton(translate("button_delete"));
 		bdel.setBounds(170,160,80,22);
 		bdel.setEnabled(false);
 		add(bdel);
@@ -250,26 +210,23 @@ public final class LeafCharsetDialog extends LeafDialog{
 		});
 		
 		/*OK*/
-		bok = new JButton("OK");
+		bok = new JButton(translate("button_ok"));
 		bok.setBounds(180,240,100,20);
 		add(bok);
 		
 		bok.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e){
-				if(usemodel.getSize()>0){
+				if(usemodel.getSize() > 0){
 					isApproved = OK_OPTION;
 					dispose();
 				}else{
-					showMessage(LeafLangManager.get(
-						"Select 1 character codes at least.",
-						"文字コードを1個以上選択してください"
-					));
+					showMessage(translate("button_ok_action_error"));
 				}
 			}
 		});
 		
 		/*キャンセル*/
-		bcancel = new JButton(LeafLangManager.get("Cancel","キャンセル"));
+		bcancel = new JButton(translate("button_cancel"));
 		bcancel.setBounds(300,240,100,20);
 		add(bcancel);
 		

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LeafTypingOptionDialog>
+  <entry key="title" value="タイピング設定"/>
+  <entry key="checkbox_enable_sound" value="タイピング音を有効にする"/>
+  <entry key="button_show_player" value="再生"/>
+  <entry key="button_open" value="開く"/>
+  <entry key="button_ok" value="OK"/>
+  <entry key="button_cancel" value="キャンセル"/>
+  <entry key="textfield_unavailable_file" value="無効なファイル"/>
+</LeafTypingOptionDialog>

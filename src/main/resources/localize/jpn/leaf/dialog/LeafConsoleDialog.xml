@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LeafConsoleDialog>
+  <entry key="title" value="Console"/>
+  <entry key="panel_console" value="コンソール"/>
+  <entry key="panel_resource" value="リソース"/>
+  <entry key="saveFile_exception" value="%s%nの保存に失敗しました。"/>
+</LeafConsoleDialog>

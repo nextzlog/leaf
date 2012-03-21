@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LeafCalcUnit>
+  <entry key="error_1_exception" value="Unary operator %s is not appliable to %s"/>
+  <entry key="error_2_exception" value="Binary operator %s is not appliable between %s and %s"/>
+</LeafCalcUnit>

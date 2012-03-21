@@ -1,248 +1,139 @@
 /**************************************************************************************
-月白プロジェクト Java 拡張ライブラリ 開発コードネーム「Leaf」
-始動：2010年6月8日
-バージョン：Edition 1.1
+ライブラリ「LeafAPI」 開発開始：2010年6月8日
 開発言語：Pure Java SE 6
-開発者：東大アマチュア無線クラブ 川勝孝也
+開発者：東大アマチュア無線クラブ
 ***************************************************************************************
 License Documents: See the license.txt (under the folder 'readme')
 Author: University of Tokyo Amateur Radio Club / License: GPL
 **************************************************************************************/
 package leaf.net.client;
 
-import java.io.*;
-import java.net.*;
-import java.text.*;
-import java.util.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.UnknownHostException;
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.nio.channels.SocketChannel;
+import java.nio.charset.Charset;
+import java.util.ArrayList;
 
-import leaf.net.client.*;
-import leaf.manager.*;
+import leaf.net.protocol.LeafNetData;
 
 /**
-*Leafのネットワーク通信機能のクライアント側本体です。
-*シングルトン設計により単一インスタンスです。
-*通信の仕様上、クライアントはサーバに接続する前に
-*ニックネームを設定しておく必要があります。
+*LeafNetAPIで提供される全てのクライアントの基底クラスです。
+*
 *@author 東大アマチュア無線クラブ
-*@since Leaf 1.0 作成：2010年6月5日
+*@since  Leaf 1.3 作成：2011年3月7日
 */
-public class LeafNetClient implements Runnable{
+public class LeafNetClient{
 	
-	/**秘匿フィールド*/
-	private static LeafNetClient client;
-	private Socket socket = null;
-	private String nickname = "Default";
-	private boolean isOnLine = false;
-	private ArrayList<String> rooms,members;
-	private ArrayList<LeafNetListener> listeners;
-	private Thread thread;
+	/*秘匿フィールド*/
+	private SocketChannel channel;
+	private InetSocketAddress address;
+	private final ByteBuffer buffer;
+	private final Charset  chset;
+	private final ArrayList<ClientListener> listeners;
 	
-	/**秘匿コンストラクタ*/
-	private LeafNetClient(){
-		rooms = new ArrayList<String>(5);
-		members= new ArrayList<String>(10);
-		listeners = new ArrayList<LeafNetListener>(1);
+	/**
+	*IPアドレスとポート番号、文字セットを指定してクライアントを構築します。
+	*@param inet  サーバーのIPアドレス
+	*@param port  ポート番号
+	*@param chset 文字セット
+	*/
+	public LeafNetClient(InetAddress inet, int port, Charset chset){
+		this.chset = chset;
+		listeners = new ArrayList<ClientListener>();
+		address = new InetSocketAddress(inet, port);
+		buffer  = ByteBuffer.allocate(4096);
 	}
 	/**
-	*このクラスのインスタンスを返します。
-	*@return LeafNetClientのインスタンス
+	*ホスト名とポート番号、文字セットを指定してクライアントを構築します。
+	*@param host  サーバー名
+	*@param port  ポート番号
+	*@param chset 文字セット
+	*@throws UnknownHostException ホストが見つからない場合
 	*/
-	public static LeafNetClient getInstance(){
-		if(client == null){
-			client = new LeafNetClient();
+	public LeafNetClient(String host, int port, Charset chset)
+	throws UnknownHostException{
+		
+		this(InetAddress.getByName(host), port, chset);
+	}
+	/**
+	*ホスト名を指定して51000番ポートでクライアントを構築します。
+	*@param host ホスト名
+	*/
+	public LeafNetClient(String host) throws UnknownHostException{
+		this(host, 51000, Charset.forName("UTF8"));
+	}
+	/**
+	*サーバーとの通信を構築します。
+	*@throws IOException 通信失敗時
+	*/
+	public void connect() throws IOException{
+		channel = SocketChannel.open();
+		channel.connect(address);
+	}
+	/**
+	*サーバーとの通信を切断します。
+	*@throws IOException 切断失敗時
+	*/
+	public void disconnect() throws IOException{
+		if(channel==null)throw new IOException();
+		channel.close();
+	}
+	/**
+	*サーバーにデータを送信します。
+	*@param data 送信データ
+	*@throws IOException 送信失敗時
+	*/
+	public void transmit(LeafNetData data) throws IOException{
+		if(channel==null)throw new IOException();
+		channel.write(chset.encode(
+			CharBuffer.wrap(LeafNetData.encode(data))
+		));
+	}
+	/**
+	*エージェントとコマンドを指定してサーバーにデータを送信します。
+	*データは自動で{@link LeafNetData}にラップされます。
+	*@param agent エージェント識別名
+	*@param cmd   コマンド
+	*@param data  添付データ
+	*/
+	public void transmit(String agent, String cmd, Object data)
+	throws IOException{
+		transmit(new LeafNetData(agent, cmd, data));
+	}
+	/**
+	*サーバーからの返信データを受信します。
+	*データは自動でオブジェクトにデコードされます。
+	*@return 受信データ
+	*@throws IOException 受信失敗時
+	*/
+	public Object receive() throws IOException{
+		if(channel==null)throw new IOException();
+		try{
+			channel.read(buffer);
+			buffer.flip();
+			String xml = chset.decode(buffer).toString();
+			return LeafNetData.decode(xml).getData();
+		}finally{
+			buffer.clear();
 		}
-		return client;
 	}
 	/**
-	*{@link LeafNetListener}を登録します。
-	*@param listener 登録するLeafNetListener
+	*受信メッセージを受け取るリスナーを登録します。
+	*@param listener リスナー
 	*/
-	public void addListener(LeafNetListener listener){
+	public void addClientListener(ClientListener listener){
 		listeners.add(listener);
 	}
 	/**
-	*指定された{@link LeafNetListener}を削除します。
-	*@param listener 削除するLeafNetListener
+	*指定されたリスナーを削除してメッセージを受け取らないようにします。
+	*@param listener リスナー
 	*/
-	public void removeListener(LeafNetListener listener){
+	public void removeClientListener(ClientListener listener){
 		listeners.remove(listener);
-	}
-	/**
-	*指定されたIPアドレスとポート番号でサーバーとの接続を開始します。
-	*@param address サーバーのIPアドレス
-	*@param port 通信するポート番号
-	*/
-	public void connect(InetAddress address,int port){
-		this.isOnLine = true;
-		thread = new Thread(this);
-		try{
-			socket = new Socket(address,port);
-			LeafNetEvent e = new LeafNetEvent(this,
-				"connected","connect to server : "+nickname);
-			for(LeafNetListener listener:listeners){
-				listener.messageReceived(e);
-			}
-			send("nick " + nickname);
-			thread.start();
-		}catch(Exception ex){
-			this.isOnLine = false;
-			LeafNetEvent e = new LeafNetEvent(this,
-				"error","connect error : " + nickname + "\n>>" + ex.toString());
-			for(LeafNetListener listener:listeners){
-				listener.errorOccurred(e);
-			}
-		}
-	}
-	/**
-	*指定されたサーバー名とポート番号でサーバーとの接続を開始します。
-	*@param host サーバー名
-	*@param port 通信するポート番号
-	*@throws UnknownHostException サーバーのIPアドレスが判定できなかった場合にスローされます。
-	*@throws SecurityException セキュリティ違反があった場合にセキュリティマネージャによってスローされます。
-	*/
-	public void connect(String host,int port) throws UnknownHostException,SecurityException{
-		try{
-			connect(InetAddress.getByName(host),port);
-		}catch(UnknownHostException ex){
-			throw ex;
-		}catch(SecurityException ex){
-			throw ex;
-		}
-	}
-	/**
-	*サーバーとの接続を強制終了します。
-	*切断に失敗した場合、全ての{@link LeafNetListener}が呼び出されます。
-	*/
-	public void disconnect(){
-		this.isOnLine = false;
-		try{
-			send("dis");
-			socket.close();
-		}catch(Exception ex){
-			LeafNetEvent e = new LeafNetEvent(this,
-				"error","disconnect error : " + nickname + "\n>>" + ex.toString());
-			for(LeafNetListener listener:listeners){
-				listener.errorOccurred(e);
-			}
-		}
-	}
-	/**
-	*接続先のサーバ名を返します。
-	*@return サーバ名
-	*/
-	public String getServerName(){
-		return socket.getInetAddress().getHostAddress();
-	}
-	/**
-	*接続先のサーバのIPアドレスを返します。
-	*@return IPアドレス
-	*/
-	public InetAddress getServerAddress(){
-		return socket.getInetAddress();
-	}
-	/**
-	*通信に使用するポート番号を返します。
-	*@return ポート番号
-	*/
-	public int getPortNumber(){
-		return socket.getPort();
-	}
-	/**
-	*クライアントが使用するニックネームを設定します。<br>
-	*@param name ニックネーム
-	*/
-	public void setNickName(String name){
-		this.nickname = name;
-		if(isOnLine){
-			send("nick " + nickname);
-		}
-	}
-	/**
-	*クライアントが使用しているニックネームを返します。
-	*@return ニックネーム
-	*/
-	public String getNickName(){
-		return nickname;
-	}
-	/**
-	*サーバとの接続状況を返します。
-	*@return サーバに接続している場合true
-	*/
-	public boolean isOnLine(){
-		return isOnLine;
-	}
-	/**
-	*サーバ上に存在するルームの一覧を返します。
-	*@return ルームの一覧を表すArrayList<String>
-	*/
-	public synchronized ArrayList<String> getRooms(){
-		return rooms;
-	}
-	/**
-	*同室のメンバーの一覧を返します。
-	*@return メンバーの一覧を表すArrayList<STring>
-	*/
-	public synchronized ArrayList<String> getMembers(){
-		return members;
-	}
-	/**
-	*サーバにメッセージを送信します。
-	*@param msg 送信するメッセージ
-	*/
-	public synchronized void send(String msg){
-		OutputStream stream= null;
-		PrintWriter writer = null;
-		try{
-			stream = socket.getOutputStream();
-			writer = new PrintWriter(stream);
-			writer.println(msg);
-			writer.flush();
-		}catch(Exception ex){
-			LeafNetEvent e = new LeafNetEvent(this,
-				"error","message transmission error : " + nickname + "\n>>" + ex.toString());
-			for(LeafNetListener listener:listeners){
-				listener.errorOccurred(e);
-			}
-		}
-	}
-	/**メッセージコマンド処理*/
-	private void processMessageCommand(LeafNetEvent e){
-		
-		if(e.getCommand().equals("rooms")){
-			this.rooms = LeafArrayManager.getListFromString(" ",e.getMessage());
-		}else if(e.getCommand().equals("members")){
-			this.members = LeafArrayManager.getListFromString(" ",e.getMessage());
-		}
-		for(LeafNetListener listener:listeners){
-			listener.messageReceived(e);
-		}
-	}
-	/**受信用のスレッドです。*/
-	public void run(){
-		InputStream stream;
-		BufferedReader reader;
-		try{
-			stream = socket.getInputStream();
-			reader = new BufferedReader(new InputStreamReader(stream));
-			while(!socket.isClosed()){
-				String line = reader.readLine();
-				String[] arr = line.split(" ",2);
-				LeafNetEvent e = new LeafNetEvent(this,arr[0],(arr.length>=2)?arr[1]:"");
-				processMessageCommand(e);
-			}
-		}catch(Exception ex){
-			LeafNetEvent e = new LeafNetEvent(this,
-				"error","Client processing error : " + nickname + "\n>>" + ex.toString());
-			for(LeafNetListener listener:listeners){
-				listener.errorOccurred(e);
-			}
-		}finally{
-			LeafNetEvent e = new LeafNetEvent(this,
-				"lethal","Client receiver downed : " + nickname);
-			for(LeafNetListener listener:listeners){
-				listener.messageReceived(e);
-			}
-			isOnLine = false;
-		}
 	}
 }

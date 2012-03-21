@@ -1,9 +1,7 @@
 /**************************************************************************************
-月白プロジェクト Java 拡張ライブラリ 開発コードネーム「Leaf」
-始動：2010年6月8日
-バージョン：Edition 1.1
+ライブラリ「LeafAPI」 開発開始：2010年6月8日
 開発言語：Pure Java SE 6
-開発者：東大アマチュア無線クラブ 川勝孝也
+開発者：東大アマチュア無線クラブ
 ***************************************************************************************
 License Documents: See the license.txt (under the folder 'readme')
 Author: University of Tokyo Amateur Radio Club / License: GPL
@@ -16,11 +14,13 @@ import javax.swing.*;
 import javax.swing.border.*;
 import javax.swing.event.*;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Map;
 
 import leaf.dialog.LeafDialog;
-import leaf.dialog.LeafColorOptionDialog;
+import leaf.dialog.LeafColorDialog;
 import leaf.manager.LeafArrayManager;
 import leaf.manager.LeafLangManager;
 
@@ -36,27 +36,30 @@ public final class LeafSyntaxOptionDialog extends LeafDialog{
 	
 	private boolean isChanged = CANCEL_OPTION;
 	private DefaultComboBoxModel setmodel;
-	private ArrayList<KeywordSet> sets;
+	private List<KeywordSet> sets;
 	
 	private LeafSyntaxManager manager;
 	
 	private KeywordSet set = null;
-	private ArrayList<String> keywords = null;
+	private List<String> keywords = null;
 	
 	private JPanel listpanel,companel;
 	private JLabel setlb;
 	private JComboBox setcomb;
-	private JButton bsadd,bsdel,bsext,bkwadd,bkwedit,bkwdel,bcstart,bcend,bcline,bcol,bok,bcan;
+	private JButton bsadd,bsdel,bsext,bkwadd,bkwedit,bkwdel;
+	private JButton bcstart,bcend,bcline,bcol,bok,bcan;
 	private JScrollPane kwscroll;
 	private JList kwlist;
 	
-	private HashMap<String, Color> colors;
-	private final LeafColorOptionDialog dialog;
+	private Map<String, Color> colors;
+	private final LeafColorDialog dialog;
 	
-	private final int BLOCK_COMMENT_START = 0, BLOCK_COMMENT_END = 1, LINE_COMMENT_START = 2;
+	private final int BLOCK_COMMENT_START = 0;
+	private final int BLOCK_COMMENT_END   = 1;
+	private final int LINE_COMMENT_START  = 2;
 	
 	/**
-	*親フレームとシンタックスマネージャを指定してキーワード強調設定画面を生成します。
+	*親フレームとシンタックスマネージャを指定して設定画面を生成します。
 	*@param owner 親フレーム
 	*@param manager 設定保存先のシンタックスマネージャ
 	*/
@@ -74,11 +77,11 @@ public final class LeafSyntaxOptionDialog extends LeafDialog{
 			}
 		});
 		colors = LeafSyntaxManager.getColorMap();
-		dialog = new LeafColorOptionDialog(this, colors);
+		dialog = new LeafColorDialog(this, colors);
 		init(manager);
 	}
 	/**
-	*親ダイアログとシンタックスマネージャを指定してキーワード強調設定画面を生成します。
+	*親ダイアログとシンタックスマネージャを指定して設定画面を生成します。
 	*@param owner 親ダイアログ
 	*@param manager 設定保存先のシンタックスマネージャ
 	*/
@@ -96,9 +99,10 @@ public final class LeafSyntaxOptionDialog extends LeafDialog{
 			}
 		});
 		colors = LeafSyntaxManager.getColorMap();
-		dialog = new LeafColorOptionDialog(this, colors);
+		dialog = new LeafColorDialog(this, colors);
 		init(manager);
 	}
+	public void init(){}
 	/**
 	*シンタックスマネージャを指定してダイアログを初期化します。
 	*@param manager 設定保存先のシンタックスマネージャ
@@ -306,7 +310,6 @@ public final class LeafSyntaxOptionDialog extends LeafDialog{
 		
 		update();
 	}
-	
 	/**
 	*新しいキーワードを追加します。
 	*/
@@ -429,13 +432,13 @@ public final class LeafSyntaxOptionDialog extends LeafDialog{
 	*/
 	private void setExtension(){
 		
-		String exts = LeafArrayManager.getStringFromList(";",set.getExtensions());
+		String exts = LeafArrayManager.toString(";",set.getExtensions());
 		exts = (String)JOptionPane.showInputDialog(this,
 			LeafLangManager.get("Separator : semicolon","区切り文字：セミコロン"),
 			LeafLangManager.get("Extensions","拡張子"),
 			JOptionPane.PLAIN_MESSAGE,null,null,exts);
 		if(exts!=null)
-			set.setExtensions(LeafArrayManager.getListFromString(";",exts));
+			set.setExtensions(LeafArrayManager.toList(";",exts));
 	}
 	/**
 	*表示を更新します。
@@ -471,7 +474,7 @@ public final class LeafSyntaxOptionDialog extends LeafDialog{
 	/**
 	*ユーザーにより編集されたキーワードセットのリストを返します。
 	*/
-	public ArrayList<KeywordSet> getKeywordSets(){
+	public List<KeywordSet> getKeywordSets(){
 		return sets;
 	}
 }

@@ -1,227 +1,252 @@
 /**************************************************************************************
-æœˆç™½ãƒ—ãƒ­ã‚¸ã‚§ã‚¯ãƒˆ Java æ‹¡å¼µãƒ©ã‚¤ãƒ–ãƒ©ãƒª é–‹ç™ºã‚³ãƒ¼ãƒ‰ãƒãƒ¼ãƒ ã€ŒLeafã€
-å§‹å‹•ï¼š2010å¹´6æœˆ8æ—¥
-ãƒãƒ¼ã‚¸ãƒ§ãƒ³ï¼šEdition 1.1
-é–‹ç™ºè¨€èªï¼šPure Java SE 6
-é–‹ç™ºè€…ï¼šæ±å¤§ã‚¢ãƒãƒãƒ¥ã‚¢ç„¡ç·šã‚¯ãƒ©ãƒ– å·å‹å­ä¹Ÿ
+ƒ‰ƒCƒuƒ‰ƒŠuLeafAPIv ŠJ”­ŠJnF2010”N6Œ8“ú
+ŠJ”­Œ¾ŒêFPure Java SE 6
+ŠJ”­ÒF“Œ‘åƒAƒ}ƒ`ƒ…ƒA–³üƒNƒ‰ƒu
 ***************************************************************************************
 License Documents: See the license.txt (under the folder 'readme')
 Author: University of Tokyo Amateur Radio Club / License: GPL
 **************************************************************************************/
 package leaf.media;
 
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Dialog;
+import java.awt.Dimension;
+import java.awt.Frame;
 import java.awt.event.*;
-import java.io.*;
-import java.util.*;
-import javax.sound.sampled.*;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.io.File;
+import java.io.IOException;
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
-import leaf.components.LeafButtons;
 import leaf.dialog.LeafDialog;
 import leaf.icon.LeafIcons;
-import leaf.manager.LeafLangManager;
 
 /**
-*éŸ³å£°ãƒ•ã‚¡ã‚¤ãƒ«ã‚’ç°¡å˜ã«å†ç”Ÿã™ã‚‹ãŸã‚ã®å°‚ç”¨ãƒ€ã‚¤ã‚¢ãƒ­ã‚°ã§ã™ã€‚
-*WAVEã€AUã€AIFFã€SNDã®å„å½¢å¼ã«å¯¾å¿œã—ã¾ã™ã€‚
-*@author æ±å¤§ã‚¢ãƒãƒãƒ¥ã‚¢ç„¡ç·šã‚¯ãƒ©ãƒ–
-*@since Leaf 1.0 ä½œæˆï¼š2009å¹´3æœˆ12æ—¥
-*@see LeafAudioPlayer
-*/
+ *‰¹ºƒtƒ@ƒCƒ‹‚ğÄ¶‚·‚éŠÈˆÕ‹@”\‚ğƒAƒvƒŠƒP[ƒVƒ‡ƒ“Œü‚¯‚É’ñ‹Ÿ‚µ‚Ü‚·B
+ *
+ *@author “Œ‘åƒAƒ}ƒ`ƒ…ƒA–³üƒNƒ‰ƒu
+ *@since Leaf 1.0 ì¬F2009”N3Œ12“ú
+ *@see LeafAudioPlayer
+ */
 public final class LeafAudioDialog extends LeafDialog{
-	
-	private final LeafAudioPlayer player = new LeafAudioPlayer();
-	
-	private final JFileChooser chooser = new JFileChooser();
-	private final JToolBar toolbar = new JToolBar();
-	private final JProgressBar progress = new JProgressBar();
-	private final JLabel label = new JLabel();
-	private JButton bopen, bplay, bstop;
-	private JToggleButton bloop;
+	private final LeafAudioPlayer player;
+	private final JFileChooser chooser;
+	private JProgressBar indicator;
+	private JLabel label;
+	private JButton bopen, bstop;
+	private JToggleButton bplay, bloop;
+	private PlayWorker worker;
+	private final IndicateListener listener;
 	
 	/**
-	*è¦ªãƒ•ãƒ¬ãƒ¼ãƒ ã‚’æŒ‡å®šã—ã¦ãƒ€ã‚¤ã‚¢ãƒ­ã‚°ã‚’ç”Ÿæˆã—ã¾ã™ã€‚
-	*@param owner è¦ªãƒ•ãƒ¬ãƒ¼ãƒ 
-	*/
+	 *eƒtƒŒ[ƒ€‚ğw’è‚µ‚Äƒ‚[ƒ_ƒŒƒXƒ_ƒCƒAƒƒO‚ğ¶¬‚µ‚Ü‚·B
+	 *@param owner eƒtƒŒ[ƒ€
+	 */
 	public LeafAudioDialog(Frame owner){
-		this(owner, null);
+		super(owner, false);
+		setContentSize(new Dimension(280, 50));
+		setResizable(false);
+		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+		addWindowListener(new WindowAdapter(){
+			public void windowClosing(WindowEvent e){
+				if(worker != null){
+					worker.cancel(true);
+					worker = null;
+				}
+			}
+		});
+		init();
+		player = new LeafAudioPlayer();
+		chooser = new JFileChooser();
+		chooser.addChoosableFileFilter(new FileNameExtensionFilter(
+		"AIFC/AIFF/AU/SND/WAV","aifc","aif","aiff","au","snd","wav"));
+		listener = new IndicateListener();
 	}
 	/**
-	*è¦ªãƒ€ã‚¤ã‚¢ãƒ­ã‚°ã‚’æŒ‡å®šã—ã¦ãƒ€ã‚¤ã‚¢ãƒ­ã‚°ã‚’ç”Ÿæˆã—ã¾ã™ã€‚
-	*@param owner è¦ªãƒ€ã‚¤ã‚¢ãƒ­ã‚°
-	*/
+	 *eƒ_ƒCƒAƒƒO‚ğw’è‚µ‚Äƒ‚[ƒ_ƒŒƒXƒ_ƒCƒAƒƒO‚ğ¶¬‚µ‚Ü‚·B
+	 *@param owner eƒ_ƒCƒAƒƒO
+	 */
 	public LeafAudioDialog(Dialog owner){
-		this(owner, null);
-	}
-	/**
-	*è¦ªãƒ•ãƒ¬ãƒ¼ãƒ ã¨ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆã®éŸ³å£°ãƒ•ã‚¡ã‚¤ãƒ«ã‚’æŒ‡å®šã—ã¦ãƒ€ã‚¤ã‚¢ãƒ­ã‚°ã‚’ç”Ÿæˆã—ã¾ã™ã€‚
-	*@param owner è¦ªãƒ•ãƒ¬ãƒ¼ãƒ 
-	*@param file éŸ³å£°ãƒ•ã‚¡ã‚¤ãƒ«
-	*/
-	public LeafAudioDialog(Frame owner, File file){
-		super(owner,null,false);
-		getContentPane().setPreferredSize(new Dimension(280,50));
-		pack();
+		super(owner, false);
+		setContentSize(new Dimension(280, 50));
 		setResizable(false);
-		
 		addWindowListener(new WindowAdapter(){
 			public void windowClosing(WindowEvent e){
-				player.stop();
+				if(worker != null){
+					worker.cancel(true);
+					worker = null;
+				}
 			}
 		});
-		init(file);
-		new ExSwingWorker().execute();
+		init();
+		player = new LeafAudioPlayer();
+		chooser = new JFileChooser();
 		chooser.addChoosableFileFilter(new FileNameExtensionFilter(
-			"AIFC/AIFF/AU/SND/WAV","aifc","aif","aiff","au","snd","wav"
-		));
+		"AIFC/AIFF/AU/SND/WAV","aifc","aif","aiff","au","snd","wav"));
+		listener = new IndicateListener();
 	}
 	/**
-	*è¦ªãƒ€ã‚¤ã‚¢ãƒ­ã‚°ã¨ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆã®éŸ³å£°ãƒ•ã‚¡ã‚¤ãƒ«ã‚’æŒ‡å®šã—ã¦ãƒ€ã‚¤ã‚¢ãƒ­ã‚°ã‚’ç”Ÿæˆã—ã¾ã™ã€‚
-	*@param owner è¦ªãƒ€ã‚¤ã‚¢ãƒ­ã‚°
-	*@param file éŸ³å£°ãƒ•ã‚¡ã‚¤ãƒ«
-	*/
-	public LeafAudioDialog(Dialog owner, File file){
-		super(owner,null,false);
-		getContentPane().setPreferredSize(new Dimension(280,50));
-		pack();
-		setResizable(false);
-		
-		addWindowListener(new WindowAdapter(){
-			public void windowClosing(WindowEvent e){
-				player.stop();
-			}
-		});
-		init(file);
-		new ExSwingWorker().execute();
-		chooser.addChoosableFileFilter(new FileNameExtensionFilter(
-			"AIFC/AIFF/AU/SND/WAV","aifc","aif","aiff","au","snd","wav"
-		));
-	}
-	/**
-	*éŸ³å£°ãƒ•ã‚¡ã‚¤ãƒ«ã‚’æŒ‡å®šã—ã¦ã“ã®ãƒ€ã‚¤ã‚¢ãƒ­ã‚°ã‚’åˆæœŸåŒ–ã—ã¾ã™ã€‚
-	*@param file éŸ³å£°ãƒ•ã‚¡ã‚¤ãƒ«
-	*/
-	public void init(File file){
-		
-		setTitle(LeafLangManager.get("Audio Player","ã‚ªãƒ¼ãƒ‡ã‚£ã‚ªãƒ—ãƒ¬ãƒ¼ãƒ¤ãƒ¼"));
+	 *ƒ_ƒCƒAƒƒO‚Ì•\¦‚Æ”z’u‚ğ‰Šú‰»‚µ‚Ü‚·B
+	 */
+	@Override public void init(){
+		setTitle(translate("title"));
 		getContentPane().removeAll();
 		
-		LeafIcons icons = new LeafIcons();
-		
-		toolbar.removeAll();
-		toolbar.setFloatable(false);
+		JToolBar toolbar = new JToolBar();
 		add(toolbar, BorderLayout.NORTH);
+		toolbar.setFloatable(false);
 		
-		ActionListener oa = new ActionListener(){
-			public void actionPerformed(ActionEvent e){
-				openFile();
-			}
-		};
-		bopen = LeafButtons.createButton(
-			"Open", "é–‹ã", icons.getIcon(icons.OPEN), oa
-		);
+		bopen = new JButton(LeafIcons.getIcon("OPEN"));
+		bopen.setToolTipText(translate("button_open"));
 		toolbar.add(bopen);
+		initButton(bopen);
 		
-		ActionListener pa = new ActionListener(){
+		bopen.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e){
-				if(player.isPlaying()) player.pause();
-				else player.start();
+				if(chooser.showOpenDialog(LeafAudioDialog.this) 
+				== JFileChooser.APPROVE_OPTION){
+					try{
+						load(chooser.getSelectedFile());
+					}catch(IOException ex){}
+				}
 			}
-		};
-		bplay = LeafButtons.createButton(
-			"Play/Stop", "å†ç”Ÿ/ä¸€æ™‚åœæ­¢", icons.getIcon(icons.PLAY), pa
-		);
+		});
+		
+		bplay = new JToggleButton(LeafIcons.getIcon("PLAY"));
+		bplay.setToolTipText(translate("button_play"));
+		bplay.setEnabled(false);
 		toolbar.add(bplay);
+		initButton(bplay);
 		
-		ActionListener sa = new ActionListener(){
+		bplay.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e){
-				player.stop();
+				if(bplay.isSelected()){
+					bopen.setEnabled(false);
+					bloop.setEnabled(false);
+					bstop.setEnabled(true);
+					worker = new PlayWorker();
+					worker.addPropertyChangeListener(listener);
+					player.start();
+					worker.execute();
+				}else if(worker != null){
+					player.pause();
+					worker.cancel(true);
+					worker = null;
+				}
 			}
-		};
+		});
 		
-		bstop = LeafButtons.createButton(
-			"Stop", "åœæ­¢", icons.getIcon(LeafIcons.STOP), sa
-		);
+		bstop = new JButton(LeafIcons.getIcon("STOP"));
+		bstop.setToolTipText(translate("button_stop"));
+		bstop.setEnabled(false);
 		toolbar.add(bstop);
+		initButton(bstop);
 		
-		ActionListener la = new ActionListener(){
+		bstop.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e){
-				player.setLoopMode(!player.isLoopMode());
+				worker.cancel(true);
+				worker = null;
 			}
-		};
+		});
 		
-		bloop = LeafButtons.createToggleButton(
-			"Loop", "é€£ç¶šå†ç”Ÿ", icons.getIcon(LeafIcons.LOOP), la
-		);
+		bloop = new JToggleButton(LeafIcons.getIcon("LOOP"));
+		bloop.setToolTipText(translate("button_loop"));
+		bloop.setEnabled(false);
 		toolbar.add(bloop);
+		initButton(bloop);
 		
-		progress.setStringPainted(true);
-		add(progress, BorderLayout.CENTER);
-		
-		label.setHorizontalAlignment(JLabel.CENTER);
-		label.setText(LeafLangManager.get("No File Selected","æœªé¸æŠ"));
-		add(label, BorderLayout.SOUTH);
-		
-		setIconImage(icons.getIcon("logo").getImage());
-		
-		repaint();
-		
-		if(file!=null){
-			load(file);
-			chooser.setSelectedFile(file);
-		}
-	}
-	/**ãƒãƒƒã‚¯ã‚°ãƒ©ã‚¦ãƒ³ãƒ‰å‡¦ç†*/
-	private class ExSwingWorker extends SwingWorker<String,String>{
-		public String doInBackground(){
-			long position, value;
-			while(true){
-				position  = player.getFramePosition();
-				value = (100 * position / (player.getFrameLength()+1)) %100;
-				progress.setValue((int)value);
-				try{
-					if(position >= player.getFrameLength()){
-						if(!player.isLoopMode()) player.stop();
-					}
-					Thread.sleep(250);
-				}catch(Exception ex){}
+		bloop.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent e){
+				player.setLoopMode(bloop.isSelected());
 			}
-		}
-	}
-	/**
-	*ãƒ•ã‚¡ã‚¤ãƒ«ã‚’é–‹ãã¾ã™ã€‚
-	*/
-	private void openFile(){
-		if(chooser.showOpenDialog(this)==chooser.APPROVE_OPTION){
-			load(chooser.getSelectedFile());
-		}
-	}
-	/**
-	*æŒ‡å®šã•ã‚ŒãŸéŸ³å£°ãƒ•ã‚¡ã‚¤ãƒ«ã‚’èª­ã¿è¾¼ã¿ã¾ã™ã€‚
-	*@param file éŸ³å£°ãƒ•ã‚¡ã‚¤ãƒ«
-	*@return èª­ã¿è¾¼ã¿ã«å¤±æ•—ã—ãŸå ´åˆfalse
-	*/
-	public boolean load(File file) {
+		});
 		
+		add(indicator = new JProgressBar(), BorderLayout.CENTER);
+		add(label = new JLabel(), BorderLayout.SOUTH);
+		label.setHorizontalAlignment(JLabel.CENTER);
+		label.setText(translate("label_no_file_selected"));
+	}
+	/**
+	 *ƒ{ƒ^ƒ“‚Ì‰Šúİ’è‚ğs‚¢‚Ü‚·B
+	 *@param button ƒ{ƒ^ƒ“
+	 */
+	private void initButton(AbstractButton button){
+		button.setBorderPainted(false);
+		button.setFocusPainted(false);
+		button.setFocusable(false);
+		button.setRequestFocusEnabled(false);
+	}
+	/**
+	 *w’è‚³‚ê‚½‰¹ºƒtƒ@ƒCƒ‹‚ğ“Ç‚İ‚İ‚Ü‚·B
+	 *@param file ‰¹ºƒtƒ@ƒCƒ‹
+	 *@throws IOException “Ç‚İ‚İ‚É¸”s‚µ‚½ê‡
+	 */
+	public void load(File file) throws IOException{
 		try{
 			player.load(file);
-			label.setText((file!=null)?file.getName():LeafLangManager.get(
-				"No File Selected","ãƒ•ã‚¡ã‚¤ãƒ«ãŒé¸æŠã•ã‚Œã¦ã„ã¾ã›ã‚“"
-			));
-			return true;
-		}catch(Exception ex){
-			ex.printStackTrace();
+			label.setText(file.getName());
+			bplay.setEnabled(true);
+			bstop.setEnabled(true);
+			bloop.setEnabled(true);
+			chooser.setSelectedFile(file);
+		}catch(IOException ex){
 			label.setText(ex.toString());
-			return false;
+			bplay.setEnabled(false);
+			bstop.setEnabled(false);
+			bloop.setEnabled(false);
+			throw ex;
 		}
 	}
 	/**
-	*éŸ³å£°ã®å†ç”Ÿã‚’åœæ­¢ã—ã¦ã‹ã‚‰ãƒ€ã‚¤ã‚¢ãƒ­ã‚°ã‚’é–‰ã˜ã¾ã™ã€‚
-	*/
-	public void dispose(){
-		player.stop();
+	 *Ä¶‚ğ’â~‚µ‚Ä‚©‚çƒ_ƒCƒAƒƒO‚ğ•Â‚¶‚Ü‚·B
+	 */
+	@Override public void dispose(){
+		if(worker != null){
+			worker.cancel(true);
+			worker = null;
+		}
 		super.dispose();
+	}
+	/**
+	 *‰¹ºÄ¶’†‚ÉƒCƒ“ƒWƒP[ƒ^[‚ğ©“®XV‚µ‚Ü‚·B
+	 */
+	private class PlayWorker extends SwingWorker<String, String>{
+		@Override public String doInBackground(){
+			final long length = player.getFrameLength();
+			if(length == 0) return "Done";
+			while(!isCancelled()){
+				long pos = player.getFramePosition();
+				setProgress(((int)(100 * pos / length)) %100);
+				if(!player.isLoopMode() && pos >= length) break;
+				try{
+					Thread.sleep(100);
+				}catch(InterruptedException ex){}
+			}
+			player.setFramePosition(0);
+			return "Done";
+		}
+		@Override public void done(){
+			if(player.isPlaying()){
+				indicator.setValue(0);
+				player.stop();
+			}
+			bplay.setSelected(false);
+			bopen.setEnabled(true);
+			bloop.setEnabled(true);
+			bstop.setEnabled(false);
+			worker = null;
+		}
+	}
+	/**
+	 *ƒCƒ“ƒWƒP[ƒ^‚Ì©“®XVƒCƒxƒ“ƒg‚ğó‚¯æ‚è‚Ü‚·B
+	 */
+	private class IndicateListener implements PropertyChangeListener{
+		public void propertyChange(PropertyChangeEvent e){
+			try{
+				indicator.setValue(worker.getProgress());
+			}catch(NullPointerException ex){}
+		}
 	}
 }

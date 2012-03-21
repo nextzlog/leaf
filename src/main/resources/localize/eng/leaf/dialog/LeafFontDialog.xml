@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LeafFontDialog>
+  <entry key="title" value="Font"/>
+  <entry key="label_font_name" value="Font name"/>
+  <entry key="label_font_style" value="Style"/>
+  <entry key="label_font_size" value="Size"/>
+  <entry key="font_style_plain" value="Plain"/>
+  <entry key="font_style_italic" value="Italic"/>
+  <entry key="font_style_bold" value="Bold"/>
+  <entry key="font_style_bold_italic" value="Bold Italic"/>
+  <entry key="label_font_sample" value="Aa Bb Cc"/>
+  <entry key="label_font_sample_title" value="Sample"/>
+  <entry key="button_ok" value="OK"/>
+  <entry key="button_cancel" value="Cancel"/>
+  <entry key="pitch_fixed" value="Fixed"/>
+  <entry key="pitch_unfixed" value="Unfixed"/>
+</LeafFontDialog>

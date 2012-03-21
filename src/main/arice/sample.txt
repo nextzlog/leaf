@@ -1,0 +1,59 @@
+/*****************************************************
+*AriCE言語のサンプルプログラム
+*作成：2011年1月28日
+*****************************************************/
+
+/*****************************************************
+*AriCE言語とは
+*東大アマチュア無線クラブが開発するスクリプト言語で、
+*少ない労力でJavaのクラスを呼び出すプログラムが書けて
+*しかも習得が容易な実用的マクロ言語を目指しています。
+*****************************************************/
+
+function main(bindings){
+	test();//関数の呼び出し
+	show(10);
+}
+//関数は「function」ブロック内に記述
+function show(n){
+	var result = factorial(10, 0);
+	writeln("Factorial 10! = " + result);
+	
+	//「exit」「return」文で結果を外部に渡す
+	exit "Factorial 10! = " + result;
+}
+//関数の引数も型宣言不要
+function factorial(n, min){
+	//条件分岐構文
+	if(n > min){
+		//再帰構文も利用可能
+		return n * factorial(n-1, min);
+	}else{
+		//「return」文で値を返す
+		return 1;
+	}
+}
+//関数は多重定義が可能
+function test(){
+	//ローカル変数
+	var a = 1, b = 10;
+	
+	//変数は式の中で代入することも可能
+	writeln(test(a=2));
+	
+	//基本的な演算子をフルサポート
+	writeln("a**2**3 = " + a**2**3);
+}
+//多重定義された関数
+function test(a){
+	//制御構文でなければ予約語も識別子になる
+	var for = "Short For Loop Test";
+	writeln(for);
+	
+	for(a < 5){
+		//三項演算子
+		writeln(a + " is " + (a%2==0?"EVEN":"ODD"));
+		a += 1;
+	}
+	return "RETURN : " + a;
+}

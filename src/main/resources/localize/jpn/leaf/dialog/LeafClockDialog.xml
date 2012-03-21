@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LeafClockDialog>
+  <entry key="title" value="世界時計"/>
+  <entry key="panel_information" value="インフォメーション"/>
+  <entry key="button_close" value="閉じる"/>
+</LeafClockDialog>

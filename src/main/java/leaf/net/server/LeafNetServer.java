@@ -1,191 +1,256 @@
 /**************************************************************************************
-月白プロジェクト Java 拡張ライブラリ 開発コードネーム「Leaf」
-始動：2010年6月8日
-バージョン：Edition 1.1
+ライブラリ「LeafAPI」 開発開始：2010年6月8日
 開発言語：Pure Java SE 6
-開発者：東大アマチュア無線クラブ 川勝孝也
+開発者：東大アマチュア無線クラブ
 ***************************************************************************************
 License Documents: See the license.txt (under the folder 'readme')
 Author: University of Tokyo Amateur Radio Club / License: GPL
 **************************************************************************************/
 package leaf.net.server;
 
-import java.io.*;
-import java.util.*;
-import java.net.*;
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
+import java.nio.channels.*;
+import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.HashMap;
 
-import leaf.net.server.*;
-import leaf.manager.*;
+import leaf.net.protocol.LeafNetAgent;
+import leaf.net.protocol.LeafNetData;
 
 /**
-*Leafのネットワーク通信機能を提供するサーバーの実装です。
-*シングルトン設計により単一インスタンスです。
+*LeafNetAPIの常時待機型サーバーの実装クラスです。
+*
 *@author 東大アマチュア無線クラブ
-*@since Leaf 1.0 作成：2010年5月23日
-*@see LeafNetMember
-*@see LeafNetRoom
+*@since Leaf 1.3 作成：2011年3月3日
 */
 public class LeafNetServer{
 	
-	/**秘匿フィールド*/
-	private static LeafNetServer server;
-	private ServerSocket socket;
-	private int port = 5555;
-	private ArrayList<LeafNetRoom> rooms;
-	private ArrayList<LeafNetMember> members;
+	/*秘匿フィールド*/
+	private Selector selector;
+	private ServerSocketChannel serverch;
+	private final InetSocketAddress address;
+	private final Charset  chset;
+	private final int portNumber;
+	private final ByteBuffer buffer;
+	private final ArrayList<ServerListener> listeners;
+	private final HashMap<String, LeafNetAgent>  agents;
+	private final HashMap<String, SocketChannel> channels;
 	
-	/**秘匿コンストラクタ*/
-	private LeafNetServer(){
-		rooms = new ArrayList<LeafNetRoom>();
-		members = new ArrayList<LeafNetMember>();
+	/**
+	*ポート番号と文字セットを指定してサーバを構築します。
+	*@param port  ポート番号
+	*@param chset 文字セット
+	*/
+	public LeafNetServer(int port, Charset chset){
+		portNumber  = port ;
+		this.chset  = chset;
+		channels  = new HashMap<String, SocketChannel>();
+		agents    = new HashMap<String, LeafNetAgent>();
+		listeners = new ArrayList<ServerListener>();
+		address = new InetSocketAddress(portNumber);
+		buffer  = ByteBuffer.allocate(4096);
+		addServerListener(new MessageProcessor());
 	}
 	/**
-	*LeafNetServerのインスタンスを返します。
-	*@return LeafNetServerの単一インスタンス
+	*51000番ポートを指定してサーバーを構築します。
 	*/
-	public static LeafNetServer getInstance(){
-		if(server == null){
-			server = new LeafNetServer();
-		}
-		return server;
+	public LeafNetServer(){
+		this(51000, Charset.forName("UTF-8"));
 	}
 	/**
-	*LeafNetServerの通信を開始します。<br>
-	*クライアントとの接続は、このメソッドの実行中に受け付けます。
-	*このメソッドはサーバーの待機中常時実行され続けます。<br>
-	*GUIアプリケーションの場合、別途スレッドを立てる必要があります。
-	*@param port 接続を受け付けるポート番号
+	*クライアントとの通信を構築します。
+	*@throws IOException ソケットバインドに失敗した場合
 	*/
-	public void start(int port){
-		System.out.println("LeafNet Server : PORT "+port);
+	private void connect() throws IOException{
+		selector = Selector.open();
+		serverch = ServerSocketChannel.open();
+		serverch.configureBlocking(false);
+		serverch.socket().bind(address);
+		serverch.register(selector, SelectionKey.OP_ACCEPT);
+	}
+	/**
+	*クライアントとの通信を例外が発生するまで常時待機します。
+	*@throws IOException 通信時の例外(通信の強制切断等)
+	*/
+	public void communicate() throws IOException{
+		connect();
 		try{
-			socket = new ServerSocket(this.port = port);
-			while(!socket.isClosed()){
-				Socket client = socket.accept();
-				LeafNetMember member = new LeafNetMember(client);
-				addClient(member);
+			while(true) accept();
+		}finally{
+			serverch.close();
+			selector.close();
+		}
+	}
+	/**
+	*クライアントとの通信を1度だけ待機・受理します。
+	*@throws IOException 通信時の例外
+	*/
+	private void accept() throws IOException{
+		selector.select();//待機
+		for(SelectionKey key : selector.selectedKeys()){
+			//受付処理
+			if(key.isAcceptable()){
+				SocketChannel socketch = serverch.accept();
+				if(socketch == null) continue;
+				socketch.configureBlocking(false);
+				socketch.register(selector, SelectionKey.OP_READ);
+				processAccess(socketch);
+				socketch = null;
 			}
-		}catch(Exception ex){ex.printStackTrace();
-			System.out.println("Connection error occurred.");
+			//読み込み処理
+			else if(key.isReadable()){
+				SocketChannel socketch = (SocketChannel)key.channel();
+				try{
+					switch(socketch.read(buffer)){
+					case 0 : continue;
+					case -1: socketch.close();break;
+					default:
+						buffer.flip();
+						processMessage(socketch, chset.decode(buffer));
+					}
+				}catch(IOException ex){
+					socketch.finishConnect();
+					socketch.close();
+				}finally{
+					buffer.clear();
+				}
+			}
 		}
 	}
 	/**
-	*接続を受け付けているポート番号を返します。
-	*@return ポート番号
+	*接続要求を処理します。
+	*@param socketch チャネル
 	*/
-	public int getPortNumber(){
-		return port;
-	}
-	/**
-	*新しいルームをサーバー内に追加します。<br>
-	*同時にサーバー上の全てのメンバーにルームの一覧情報が送信されます。
-	*@param room 追加する{@link LeafNetRoom}
-	*/
-	public synchronized void addRoom(LeafNetRoom room){
-		if(rooms.contains(room))return;
-		rooms.add(room);
-		System.out.println("New Room \""+room+"\" is added.");
-		/*通知*/
-		for(LeafNetMember member:members){
-			member.sendMessage("rooms " + LeafArrayManager.getStringFromList(" ",rooms));
+	private void processAccess(SocketChannel socketch)
+	throws IOException{
+		
+		InetAddress inet = socketch.socket().getInetAddress();
+		ServerEvent e  = new ServerEvent(this, socketch, inet);
+		for(ServerListener listener : listeners){
+			try{
+				listener.clientAccessed(e);
+			}catch(Exception ex){
+				throw new IOException(ex);
+			}
 		}
 	}
 	/**
-	*指定された名前のルームを返します。<br>
-	*返すべきルームが存在しない場合、nullを返します。
-	*@param name ルーム名
-	*@return 指定した{@link LeafNetRoom}
+	*受信メッセージを処理します。
+	*@param socketch チャネル
+	*@param msg 受信メッセージ
+	*@throws IOException 入出力処理に失敗した場合
 	*/
-	public LeafNetRoom getRoom(String name){
-		for(LeafNetRoom room:rooms){
-			if(room.getName().equals(name))return room;
-		}return null;
-	}
-	/**
-	*サーバー上に存在する全てのルームの配列を返します。
-	*@return 全ての{@link LeafNetRoom}の配列
-	*/
-	public LeafNetRoom[] getRooms(){
-		return (LeafNetRoom[]) rooms.toArray(new LeafNetRoom[0]);
-	}
-	/**
-	*指定されたルームを削除します。
-	*@param room 削除する{@link LeafNetRoom}
-	*/
-	public synchronized void removeRoom(LeafNetRoom room){
-		rooms.remove(room);
-		System.out.println("Room \""+room+"\" is removed.");
-		/*通知*/
-		for(LeafNetMember member:members){
-			member.sendMessage("rooms " + ((rooms.size()>0)?LeafArrayManager.getStringFromList(" ",rooms):""));
+	private void processMessage(SocketChannel socketch, Object msg)
+	throws IOException{
+		
+		ServerEvent e = new ServerEvent(this, socketch, msg);
+		for(ServerListener listener : listeners){
+			try{
+				listener.messageReceived(e);
+			}catch(Exception ex){
+				throw new IOException(ex);
+			}
 		}
 	}
 	/**
-	*このサーバー上に存在する全てのルームを削除します。
+	*指定されたチャネルにデータを送信します。
+	*データは自動で{@link LeafNetData}にラップされます。
+	*@param channel 送信先チャネル
+	*@param data 送信データ
+	*@throws IOException 送信に失敗した場合
 	*/
-	public synchronized void clearRooms(){
-		rooms.clear();
-		for(LeafNetMember member:members){//通知
-			member.sendMessage("msg  All rooms are removed from the server.");
-			member.sendMessage("rooms");
+	public void transmit(SocketChannel channel, Object data)
+	throws IOException{
+		
+		String xml = LeafNetData.encode(new LeafNetData(data));
+		channel.write(chset.encode(xml));
+	}
+	/**
+	*サーバーに接続する全てのクライアントにデータを送信します。
+	*データは自動で{@link LeafNetData}にラップされます。
+	*@param data 送信データ
+	*@return 送信の結果発生した例外 正常であればnullを返す
+	*/
+	public IOException[] transmit(Object data){
+		ArrayList<IOException> exs = new ArrayList<IOException>();
+		for(SocketChannel channel : channels.values()){
+			try{
+				transmit(channel, data);
+			}catch(IOException ex){
+				exs.add(ex);
+			}
 		}
-		System.out.println("All Rooms are removed.");
+		IOException[] ret = exs.toArray(new IOException[0]);
+		return (ret.length>0)? ret : null;
 	}
-	/**指定されたメンバーをこのサーバー上に追加*/
-	private synchronized void addClient(LeafNetMember member){
-		if(members.contains(member)){
-			member.sendMessage("msg Name " + member + "has already been used.");
-			return;
+	/**
+	*受信メッセージを受け取るリスナーを登録します。
+	*@param listener リスナー
+	*/
+	public void addServerListener(ServerListener listener){
+		listeners.add(listener);
+	}
+	/**
+	*指定されたリスナーを削除してメッセージを受け取らないようにします。
+	*@param listener リスナー
+	*/
+	public void removeServerListener(ServerListener listener){
+		listeners.remove(listener);
+	}
+	/**
+	*サーバーが受信したイベントを処理します。
+	*/
+	private class MessageProcessor implements ServerListener{
+		public void clientAccessed(ServerEvent e) throws IOException{
+			addClient(e);
 		}
-		members.add(member);
-		System.out.println("New Client joined.");
-	}
-	/**
-	*指定されたメンバーを返します。<br>
-	*メンバーが存在しない場合、nullを返します。
-	*@param name メンバー名
-	*@return 指定した{@link LeafNetMember}
-	*/
-	public LeafNetMember getClient(String name){
-		for(LeafNetMember member:members){
-			if(member.getName().equals(name))return member;
-		}return null;
-	}
-	/**
-	*このサーバー上に存在する全てのメンバーの配列を返します。
-	*@return 全てのメンバーの配列
-	*/
-	public LeafNetMember[] getClients(){
-		return (LeafNetMember[])members.toArray(new LeafNetMember[0]);
-	}
-	/**
-	*指定されたメンバーをサーバーから削除します。
-	*@param member 削除する{@link LeafNetMember}
-	*/
-	public synchronized void removeClient(LeafNetMember member){
-		members.remove(member);
-		System.out.println("Client \""+member+"\" is removed");
-		for(LeafNetRoom room:rooms){
-			if(room.contains(member))room.remove(member);
+		public void messageReceived(ServerEvent e)throws IOException{
+			processCommand(e);
 		}
 	}
 	/**
-	*このサーバー上に存在する全てのメンバーを削除します。<br>
-	*サーバーは全てのクライアントに削除を通知した上でメンバーを削除します。
+	*接続を要求してきたクライアントをサーバーに登録します。
+	*@param e 接続要求イベント
+	*@throws IOException エージェントで例外が発生した場合
 	*/
-	public synchronized void clearClients(){
-		for(LeafNetMember member:members){
-			member.sendMessage("msg  All clients are removed from the server.");
+	private void addClient(ServerEvent e) throws IOException{
+		String name = e.getInetAddress().toString();
+		SocketChannel sch = e.getSocketChannel();
+		channels.put(name, sch);
+		for(LeafNetAgent agent : agents.values()){
+			agent.clientAccessed(sch);
 		}
-		members.clear();
-		System.out.println("All Clients are removed.");
 	}
 	/**
-	*サーバー上の全てのメンバーを削除し、サーバーの通信を終了します。
-	**/
-	public void disconnect() throws IOException{
-		clearClients();
-		socket.close();
-		System.out.println("Server Disconnected Successfully");
+	*受信したコマンドを処理します。
+	*@param e 受信イベント
+	*@throws 送信に失敗した場合
+	*/
+	private void processCommand(ServerEvent e) throws IOException{
+		LeafNetData  data  = LeafNetData.decode(e.getMessage());
+		LeafNetAgent agent = agents.get(data.getAgentName());
+		SocketChannel sch  = e.getSocketChannel();
+		if(agent != null){
+			transmit(sch, agent.messageReceived(sch, data));
+		}else{
+			transmit(sch, "Illegal Operation Error");
+		}
+	}
+	/**
+	*エージェントを追加します。
+	*@param agent エージェント
+	*/
+	public void addAgent(LeafNetAgent agent){
+		agents.put(agent.getName(), agent);
+	}
+	/**
+	*エージェントを削除します。
+	*@param agent 削除するエージェント
+	*/
+	public void removeAgent(LeafNetAgent agent){
+		agents.remove(agent.getName());
 	}
 }

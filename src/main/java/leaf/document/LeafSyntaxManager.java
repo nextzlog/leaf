@@ -1,9 +1,7 @@
 /**************************************************************************************
-月白プロジェクト Java 拡張ライブラリ 開発コードネーム「Leaf」
-始動：2010年6月8日
-バージョン：Edition 1.1
+ライブラリ「LeafAPI」 開発開始：2010年6月8日
 開発言語：Pure Java SE 6
-開発者：東大アマチュア無線クラブ 川勝孝也
+開発者：東大アマチュア無線クラブ
 ***************************************************************************************
 License Documents: See the license.txt (under the folder 'readme')
 Author: University of Tokyo Amateur Radio Club / License: GPL
@@ -12,11 +10,13 @@ package leaf.document;
 
 import java.awt.Color;
 import java.awt.Frame;
+import java.awt.Dialog;
 import java.io.*;
 import java.beans.XMLEncoder;
 import java.beans.XMLDecoder;
-import java.util.ArrayList;
+import java.util.List;
 import java.util.HashMap;
+import java.util.Map;
 
 /**
 *キーワード強調設定を管理するためのマネージャークラスです。<br>
@@ -29,8 +29,8 @@ import java.util.HashMap;
 
 public class LeafSyntaxManager{
 	
-	private ArrayList<KeywordSet> keywordsets = null;
-	private static HashMap<String, Color> colors = new HashMap<String, Color>(5);
+	private List<KeywordSet> keywordsets = null;
+	private static Map<String, Color> colors = new HashMap<String, Color>(5);
 	
 	static{
 		colors.put("normal",  Color.BLACK);
@@ -59,19 +59,12 @@ public class LeafSyntaxManager{
 			bstream = new BufferedInputStream(fstream);
 			decoder = new XMLDecoder(bstream);
 			
-			try{
-				Object obj = decoder.readObject();
-				if(obj instanceof LeafSyntaxSaveData){
-					keywordsets = ((LeafSyntaxSaveData)obj).getData();
-				}else{
-					throw new ClassCastException();
-				}
-			}catch(ArrayIndexOutOfBoundsException ex){
-				throw ex;
+			Object obj = decoder.readObject();
+			if(obj instanceof LeafSyntaxSaveData){
+				keywordsets = ((LeafSyntaxSaveData)obj).getData();
+			}else{
+				throw new ClassCastException();
 			}
-			
-		}catch(FileNotFoundException ex){
-			throw ex;
 		}finally{
 			if(decoder!=null)decoder.close();
 		}
@@ -92,9 +85,6 @@ public class LeafSyntaxManager{
 			bstream = new BufferedOutputStream(fstream);
 			encoder = new XMLEncoder(bstream);
 			encoder.writeObject(new LeafSyntaxSaveData(keywordsets));
-			
-		}catch(FileNotFoundException ex){
-			throw ex;
 		}finally{
 			if(encoder!=null)encoder.close();
 		}
@@ -103,18 +93,14 @@ public class LeafSyntaxManager{
 	*キーワードセットのリストを返します。
 	*@return 空の場合null
 	*/
-	public ArrayList<KeywordSet> getKeywordSets(){
-		if(keywordsets!=null){
-			return new ArrayList<KeywordSet>(keywordsets);
-		}else{
-			return null;
-		}
+	public List<KeywordSet> getKeywordSets(){
+		return keywordsets;
 	}
 	/**
 	*キーワードセットのリストを設定します。
 	*@param sets キーワードセットのリスト
 	*/
-	public void setKeywordSets(ArrayList<KeywordSet> sets){
+	public void setKeywordSets(List<KeywordSet> sets){
 		keywordsets = sets;
 	}
 	/**
@@ -171,11 +157,20 @@ public class LeafSyntaxManager{
 	}
 	/**
 	*親フレームを指定してキーワード設定画面を開きます。
-	*@param parent 親フレーム
+	*@param owner 親フレーム
 	*@return 設定が変更された場合true
 	*/
-	public boolean showOptionDialog(Frame parent){
-		LeafSyntaxOptionDialog dialog = new LeafSyntaxOptionDialog(parent,this);
+	public boolean showOptionDialog(Frame owner){
+		LeafSyntaxOptionDialog dialog = new LeafSyntaxOptionDialog(owner,this);
+		return (dialog.showDialog()==dialog.OK_OPTION);
+	}
+	/**
+	*親ダイアログを指定してキーワード設定画面を開きます。
+	*@param owner 親ダイアログ
+	*@return 設定が変更された場合true
+	*/
+	public boolean showOptionDialog(Dialog owner){
+		LeafSyntaxOptionDialog dialog = new LeafSyntaxOptionDialog(owner,this);
 		return (dialog.showDialog()==dialog.OK_OPTION);
 	}
 	/**
@@ -194,17 +189,17 @@ public class LeafSyntaxManager{
 		colors.put(key, color);
 	}
 	/**
-	*配色を並べたハッシュマップを返します。
-	*@return ハッシュマップ
+	*配色を並べたマップを返します。
+	*@return マップ
 	*/
-	protected static HashMap<String, Color> getColorMap(){
+	protected static Map<String, Color> getColorMap(){
 		return colors;
 	}
 	/**
-	*配色を並べたハッシュマップを設定します。
-	*@param map ハッシュマップ
+	*配色を並べたマップを設定します。
+	*@param map マップ
 	*/
-	protected static void setColorMap(HashMap<String, Color> map){
+	protected static void setColorMap(Map<String, Color> map){
 		colors = map;
 	}
 }

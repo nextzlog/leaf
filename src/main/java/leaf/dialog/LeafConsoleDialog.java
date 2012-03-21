@@ -1,9 +1,7 @@
 /**************************************************************************************
-月白プロジェクト Java 拡張ライブラリ 開発コードネーム「Leaf」
-始動：2010年6月8日
-バージョン：Edition 1.1
+ライブラリ「LeafAPI」 開発開始：2010年6月8日
 開発言語：Pure Java SE 6
-開発者：東大アマチュア無線クラブ 川勝孝也
+開発者：東大アマチュア無線クラブ
 ***************************************************************************************
 License Documents: See the license.txt (under the folder 'readme')
 Author: University of Tokyo Amateur Radio Club / License: GPL
@@ -12,250 +10,262 @@ package leaf.dialog;
 
 import java.awt.*;
 import java.awt.event.*;
-import javax.swing.*;
 import java.io.*;
-import javax.swing.text.JTextComponent;
+import javax.swing.*;
 
-import leaf.icon.LeafIcons;
-import leaf.components.LeafButtons;
-import leaf.components.system.*;
-import leaf.components.taskpane.*;
-import leaf.manager.LeafLangManager;
+import leaf.manager.LeafCharsetManager;
+import leaf.manager.LeafLocalizeManager;
+import leaf.swing.LeafGraphMonitor;
+import leaf.swing.menu.LeafMenuBuilder;
+import leaf.swing.taskpane.LeafExpandPane;
+import leaf.swing.taskpane.LeafTaskPane;
+import leaf.swing.text.LeafTextArea;
+import leaf.swing.text.LeafTextField;
+import leaf.swing.text.LeafTextScrollPane;
+
+import static java.awt.Font.MONOSPACED;
+import static java.awt.Font.PLAIN;
+import static java.awt.event.KeyEvent.*;
+import static leaf.icon.LeafIcons.*;
 
 /**
-*仮想マシン上で発生した全ての標準出力とエラーメッセージを自動で表示するダイアログです。
-*<br>{@link #setSystemOutAndErr()}メソッドでこのダイアログを出力先に設定できます。
-*このメソッドの実行後は、出力に応じてダイアログが自動で表示されます。
-*@author 東大アマチュア無線クラブ
-*@since Leaf 1.0 作成：2010年5月22日
-*@see LeafSystemOutArea
-*/
-public final class LeafConsoleDialog 
-	extends LeafDialog implements ActionListener,SystemOutListener{
+ *実行環境の全てのコンソール入出力を扱うダイアログです。
+ *
+ *@author 東大アマチュア無線クラブ
+ *@since Leaf 1.0 作成：2010年5月22日
+ */
+public final class LeafConsoleDialog extends LeafDialog {
 	
-	private final LeafTaskPane taskpane;
-	private final LeafSystemOutArea out,err;
-	private LeafExpandPane outpane,errpane;
-	private LeafSearchDialog searchdialog;
-	
+	private ConsoleArea outarea;
+	private LeafTextScrollPane outscroll;
+	private LeafExpandPane outexpand, memexpand;
+	private LeafGraphMonitor monitor;
+	private LeafSearchDialog srchdialog;
+	private LeafTextField infield;
+	private final ExActionListener listener;
 	private final JMenuBar menubar;
-		private final LeafIcons icons = new LeafIcons();
-	private LeafSystemOutArea textpane;
+	private final LeafTaskPane taskpane;
+	private boolean isAssociatedWithConsole = false;
+	
+	private static String MENUBAR_FILE = "LeafConsoleDialog_menu.xml";
+	
 	/**
-	*親フレームを指定してダイアログを生成します。
-	*@param frame 親フレーム
-	*/
-	public LeafConsoleDialog(Frame frame){
-		super(frame,LeafLangManager.get("Console Out","コンソール出力"),false);
-		getContentPane().setPreferredSize(new Dimension(620,310));
-		pack();
+	 *親フレームを指定してコンソールダイアログを構築します。
+	 *@param owner ダイアログの親
+	 */
+	public LeafConsoleDialog(Frame owner) {
+		super(owner, false);
+		setContentSize(new Dimension(600, 320));
 		setResizable(false);
 		
 		taskpane = new LeafTaskPane();
-		add(taskpane,BorderLayout.CENTER);
+		add(taskpane, BorderLayout.CENTER);
 		
-		out = new LeafSystemOutArea();
-		out.addSystemOutListener(this);
-		
-		out.addFocusListener(new FocusAdapter(){
-			public void focusGained(FocusEvent e){
-				textpane = out;
-			}
-		});
-		textpane = out;
-		
-		err = new LeafSystemOutArea();
-		err.addSystemOutListener(this);
-		
-		err.addFocusListener(new FocusAdapter(){
-			public void focusGained(FocusEvent e){
-				textpane = err;
-			}
-		});
-		
-		menubar = new JMenuBar();
-		setJMenuBar(menubar);
+		listener = new ExActionListener();
+		setJMenuBar(menubar = new JMenuBar());
 		menubar.setBorderPainted(false);
-		
 		init();
-		
-		searchdialog = new LeafSearchDialog(this);
 	}
 	/**
-	*このダイアログを初期化します。
-	*/
-	public void init(){
+	 *親ダイアログを指定してコンソールダイアログを構築します。
+	 *@param owner ダイアログの親
+	 */
+	public LeafConsoleDialog(Dialog owner) {
+		super(owner, false);
+		setContentSize(new Dimension(600, 320));
+		setResizable(false);
 		
-		setTitle(LeafLangManager.get("Console Out","コンソール出力"));
-		if(searchdialog!=null) searchdialog.init();
+		taskpane = new LeafTaskPane();
+		add(taskpane, BorderLayout.CENTER);
 		
-		outpane = new LeafExpandPane
-		(LeafLangManager.get("Standard Out","標準出力")){
-			public JComponent setContent(){
-				return new JScrollPane(out);
-			}
-		};
-		
-		errpane = new LeafExpandPane
-		(LeafLangManager.get("Error Out","例外出力")){
-			public JComponent setContent(){
-				return new JScrollPane(err);
-			}
-		};
-		
+		listener = new ExActionListener();
+		setJMenuBar(menubar = new JMenuBar());
+		menubar.setBorderPainted(false);
+		init();
+	}
+	/**
+	 *ダイアログを初期化します。
+	 */
+	@Override public void init(){
+		setTitle(translate("title"));
 		taskpane.removeAll();
 		
-		taskpane.addComp(outpane);
-		taskpane.addComp(errpane);
+		/*standard out / err / in*/
+		outarea = new ConsoleArea();
+		infield = new LeafTextField();
+		outscroll = new LeafTextScrollPane(outarea);
+		outexpand = new LeafExpandPane(
+			translate("panel_console")){
+			protected JComponent createContent(){
+				JPanel panel = new JPanel(new BorderLayout());
+				panel.add(outscroll, BorderLayout.CENTER);
+				panel.add(infield,   BorderLayout.SOUTH);
+				return panel;
+			}
+		};
+		infield.setBackground(Color.BLACK);
+		infield.setTextColor(Color.WHITE);
+		infield.setHintColor(Color.WHITE);
+		infield.setSelectedTextColor(Color.BLACK);
+		infield.setSelectionColor(Color.WHITE);
+		infield.setHintText("Console Input");
+		outexpand.setContentSize(new Dimension(100, 220));
+		outexpand.setExpanded(true);
+		taskpane.addComp(outexpand);
 		
+		/*resource monitor*/
+		monitor   = new LeafGraphMonitor(500){
+			@Override public int sample(){
+				Runtime runtime = Runtime.getRuntime();
+				long free  = runtime.freeMemory();
+				long total = runtime.totalMemory();
+				return (int)(500 - 500 * free / total);
+			}
+		};
+		memexpand = new LeafExpandPane(
+			translate("panel_resource")){
+			protected JComponent createContent(){
+				return monitor;
+			}
+		};
+		memexpand.setContentSize(new Dimension(100, 220));
+		monitor.setAutoSamplingEnabled(true);
+		taskpane.addComp(memexpand);
+		
+		/*menubar*/
 		menubar.removeAll();
-		menubar.add(makeFileMenu());
-		menubar.add(makeEditMenu());
-		
-		repaint();
-	}
-	/**
-	*このダイアログに全ての標準出力とエラーメッセージを表示するように設定します。<br>
-	*以後、出力があるたびにこのダイアログが自動で再表示されます。
-	*/
-	public void setSystemOutAndErr(){
-		out.setSystemOut();
-		err.setSystemErr();
-	}
-	/**
-	*このダイアログを表示します。
-	*/
-	public void setVisible(boolean opt){
-		if(!isVisible()){
-			out.setText("");
-			err.setText("");
-		}
-		super.setVisible(opt);
-		outpane.setExpanded(true);
-		errpane.setExpanded(false);
-	}
-	/**
-	*出力があった際に{@link LeafSystemOutArea}によって呼び出されます。
-	*/
-	public synchronized void printed(SystemOutEvent e){
-		if(!isVisible())setVisible(true);
-	}
-	/**
-	*ファイルメニューを生成して返します。
-	*@return ファイルメニュー
-	*/
-	private JMenu makeFileMenu(){
-		JMenu menu = LeafButtons.createMenu("File","ファイル",KeyEvent.VK_F);
-		menu.add(createMenuItem(
-			"Save Standard Out","標準出力を保存",icons.SAVE,"ctrl S",KeyEvent.VK_S));
-		menu.add(createMenuItem(
-			"Save Standard Err","例外出力を保存",icons.SAVE,"ctrl S",KeyEvent.VK_A));
-		menu.addSeparator();
-		menu.add(createMenuItem(
-			"Print Standard Out","標準出力を印刷",icons.PRINT,"ctrl P",KeyEvent.VK_O));
-		menu.add(createMenuItem(
-			"Print Standard Err","例外出力を印刷",icons.PRINT,"ctrl shift P",KeyEvent.VK_E));
-		menu.addSeparator();
-		menu.add(createMenuItem(
-			"Close","閉じる",icons.EXIT,"ctrl F4",KeyEvent.VK_X));
-		return menu;
-	}
-	/**
-	*編集メニューを生成して返します。
-	*@return 編集メニュー
-	*/
-	private JMenu makeEditMenu(){
-		JMenu menu = LeafButtons.createMenu("Edit","編集",KeyEvent.VK_E);
-		menu.add(createMenuItem(
-			"Copy","コピー",icons.COPY,"ctrl C",KeyEvent.VK_C));
-		menu.add(createMenuItem(
-			"Select All","全て選択",icons.SELECT_ALL,"ctrl A",KeyEvent.VK_A));
-		menu.addSeparator();
-		menu.add(createMenuItem(
-			"Delete Standard Out","標準出力を消去",icons.DELETE,null,KeyEvent.VK_O));
-		menu.add(createMenuItem(
-			"Delete Standard Err","例外出力を消去",icons.DELETE,null,KeyEvent.VK_E));
-		menu.addSeparator();
-		menu.add(createMenuItem(
-			"Search","検索",icons.SEARCH,"ctrl F",KeyEvent.VK_F));
-		return menu;
-	}
-	/**
-	*メニューアイテムを生成して返します。
-	*@return メニューアイテム
-	*/
-	private JMenuItem createMenuItem(
-		String eng,String jpn,String icon,String key,int mnemo){
-		return LeafButtons.createMenuItem(eng,jpn,icons.getIcon(icon),this,key,mnemo);
-	}
-	public void actionPerformed(ActionEvent e){
-		String cmd = ((AbstractButton)e.getSource()).getActionCommand();
-		if(cmd.equals("Save Standard Out")){
-			saveOut(out);
-		}else if(cmd.equals("Save Standard Err")){
-			saveOut(err);
-		}else if(cmd.equals("Print Standard Out")){
-			printOut(out);
-		}else if(cmd.equals("Print Standard Err")){
-			printOut(err);
-		}else if(cmd.equals("Close")){
-			dispose();
-		}else if(cmd.equals("Copy")){
-			copy();
-		}else if(cmd.equals("Select All")){
-			selectAll();
-		}else if(cmd.equals("Delete Standard Out")){
-			out.setText("");
-		}else if(cmd.equals("Delete Standard Err")){
-			err.setText("");
-		}else if(cmd.equals("Search")){
-			search();
-		}
-	}
-	/**出力を保存*/
-	private void saveOut(JTextComponent area){
-		LeafFileChooser chooser = new LeafFileChooser();
-		
-		if(chooser.showSaveDialog(this) != JFileChooser.APPROVE_OPTION) return;
-		
-		FileOutputStream stream = null;
-		OutputStreamWriter oswriter = null;
-
+		LeafMenuBuilder builder = new LeafMenuBuilder(menubar);
+		builder.addActionListener(listener);
 		try{
-			stream = new FileOutputStream(chooser.getSelectedFile());
-			oswriter = new OutputStreamWriter(stream,chooser.getSelectedEncoding());
-			area.write(oswriter);
-		}catch(Exception ex){
+			LeafLocalizeManager localize
+			= LeafLocalizeManager.getInstance(getClass());
+			builder.build(localize.getResource(MENUBAR_FILE));
+		}catch(Exception ex){}
+		
+		if(isAssociatedWithConsole) setSystemConsole();
+		repaint();
+		
+		srchdialog = new LeafSearchDialog(this);
+		srchdialog.setTextComponent(outarea);
+	}
+	/**
+	 *コンソール入出力をこのダイアログに関連付けます。
+	 */
+	public void setSystemConsole(){
+		PrintStream ps = new PrintStream(outarea.stream, true);
+		System.setOut(ps);
+		System.setErr(ps);
+		setSystemIn(infield);
+		isAssociatedWithConsole = true;
+	}
+	/**
+	 *テキストフィールドに標準入力を関連付けます。
+	 *@param infield 関連付けるテキストフィールド
+	 */
+	private void setSystemIn(final LeafTextField infield){
+		try{
+			PipedOutputStream pos = new PipedOutputStream();
+			OutputStreamWriter sw = new OutputStreamWriter(pos);
+			final BufferedWriter bw = new BufferedWriter(sw);
+			System.setIn(new PipedInputStream(pos));
+			infield.addActionListener(new ActionListener(){
+				public void actionPerformed(ActionEvent e){
+					try{
+						String text = infield.getText();
+						bw.write(text, 0, text.length());
+						bw.newLine();
+						bw.flush();
+						infield.setText("");
+					}catch(IOException ex){
+						ex.printStackTrace();
+					}
+				}
+			});
+		}catch(IOException ex){
 			ex.printStackTrace();
-		}finally{
-			try{
-				oswriter.close();
-				stream.close();
-			}catch(Exception ex){
-				ex.printStackTrace();
+			infield.setEnabled(false);
+		}
+	}
+	/**
+	 *標準出力/エラー出力を表示するコンポーネントです。
+	 */
+	private class ConsoleArea extends LeafTextArea{
+		public final ConsoleOutputStream stream;
+		public ConsoleArea(){
+			super(100, 100);
+			setEditable(false);
+			setLineCursorVisible(false);
+			stream = new ConsoleOutputStream(this);
+			int size = getFont().getSize();
+			setFont(new Font(MONOSPACED, PLAIN, size));
+		}
+		public void moveToEnd(){
+			setCaretPosition(getText().length());
+		}
+	}
+	/**
+	 *標準出力/エラー出力先ストリームです。
+	 */
+	private class ConsoleOutputStream extends OutputStream{
+		private final ConsoleArea area;
+		private final ByteArrayOutputStream stream;
+		public ConsoleOutputStream(ConsoleArea area){
+			super();
+			this.area = area;
+			this.stream = new ByteArrayOutputStream();
+		}
+		@Override
+		public synchronized void write(int b){
+			stream.write(b);
+		}
+		@Override
+		public synchronized void flush(){
+			area.append(stream.toString());
+			area.moveToEnd();
+			stream.reset();
+		}
+	}
+	/**
+	 *メニュー項目が選択されたときに呼び出されます。
+	 */
+	private class ExActionListener implements ActionListener{
+		public void actionPerformed(ActionEvent e){
+			String cmd = e.getActionCommand();
+			if(cmd.equals("file_close")){
+				dispose();
+			}else if(cmd.equals("edit_copy")){
+				outarea.copy();
+				outarea.requestFocusInWindow();
+			}else if(cmd.equals("edit_select_all")){
+				outarea.selectAll();
+				outarea.requestFocusInWindow();
+			}else if(cmd.equals("edit_search")){
+				srchdialog.setVisible(true);
 			}
 		}
 	}
-	/**出力を印刷*/
-	private void printOut(JTextComponent area){
+	/**
+	 *出力内容をライターに書き込みます。
+	 *@param writer 書き込み先ライター
+	 *@throws IOException 書き込み例外があった場合
+	 */
+	private void write(Writer writer) throws IOException{
+		BufferedWriter bwriter = null;
 		try{
-			area.print();
-		}catch(Exception ex){
-			ex.printStackTrace();
+			bwriter  = new BufferedWriter(writer);
+			int start = 0, end = 0;
+			String text = outarea.getText();
+			String ls   = LeafCharsetManager.getLineSeparator();
+			while((end = text.indexOf("\n", start)) >= 0){
+				bwriter.write(text.substring(start, end) + ls);
+				bwriter.flush();
+				start = end + 1;
+			}
+			if(start < text.length())
+				bwriter.write(text.substring(start, text.length()));
+		}finally{
+			if(bwriter != null) bwriter.close();
+			if( writer != null) writer.close();
 		}
-	}
-	/**コピー*/
-	private void copy(){
-		textpane.copy();
-		textpane.requestFocusInWindow();
-	}
-	/**全て選択*/
-	private void selectAll(){
-		textpane.selectAll();
-		textpane.requestFocusInWindow();
-	}
-	/**検索*/
-	private void search(){
-		searchdialog.showDialog(textpane);
 	}
 }

@@ -1,9 +1,7 @@
 /**************************************************************************************
-月白プロジェクト Java 拡張ライブラリ 開発コードネーム「Leaf」
-始動：2010年6月8日
-バージョン：Edition 1.1
+ライブラリ「LeafAPI」 開発開始：2010年6月8日
 開発言語：Pure Java SE 6
-開発者：東大アマチュア無線クラブ 川勝孝也
+開発者：東大アマチュア無線クラブ
 ***************************************************************************************
 License Documents: See the license.txt (under the folder 'readme')
 Author: University of Tokyo Amateur Radio Club / License: GPL
@@ -22,30 +20,24 @@ import java.util.TimerTask;
 import java.util.TimeZone;
 import java.text.DateFormat;
 
-import leaf.components.LeafClockPane;
-import leaf.manager.LeafLangManager;
+import leaf.swing.LeafClockPane;
 
 /**
-*世界時計の表示機能を持つ高機能なモーダレス時計ダイアログです。
-*
-*@author 東大アマチュア無線クラブ
-*@since Leaf 1.2 作成：2011年1月5日
-*
-*@see LeafClockPane
-*@see LeafClockDialog
-*/
+ *世界時計の表示機能を持つモーダレス時計ダイアログです。
+ *
+ *@author 東大アマチュア無線クラブ
+ *@since Leaf 1.2 作成：2011年1月5日
+ @see LeafClockPane
+ */
 public final class LeafClockDialog extends LeafDialog{
-	
+	private TimeZone timezone, utczone;
 	private final LeafClockPane clock;
-	private JPanel panel;
-	private JLabel lbzone;
 	private ClockLabel lbtime, lbutc;
-	private JComboBox combo;
 	private JButton bclose;
-	
+	private JComboBox combo;
+	private JLabel lbzone;
+	private JPanel panel;
 	private Timer timer;
-	private TimeZone zone, utczone;
-	
 	private final String[] ids;
 	
 	/**
@@ -63,65 +55,56 @@ public final class LeafClockDialog extends LeafDialog{
 		this(owner, null);
 	}
 	/**
-	*親フレームとデフォルトのタイムゾーンを指定してダイアログを生成します。
+	*親フレームとタイムゾーンを指定してダイアログを生成します。
 	*@param owner 親フレーム
-	*@param zone タイムゾーン
+	*@param tz デフォルトのタイムゾーン
 	*/
-	public LeafClockDialog(Frame owner, TimeZone zone){
-		super(owner, null, false);
-		
-		getContentPane().setPreferredSize(new Dimension(380,210));
-		pack();
+	public LeafClockDialog(Frame owner, TimeZone tz){
+		super(owner, false);
+		setContentSize(new Dimension(380, 210));
 		setResizable(false);
-		setLayout(null);
 		
 		addWindowListener(new WindowAdapter(){
 			public void windowClosing(WindowEvent e){
 				stop();
 			}
 		});
-		utczone   = TimeZone.getTimeZone("UTC");
-		this.zone = (zone != null)? zone : TimeZone.getDefault();
-		
-		ids = TimeZone.getAvailableIDs();
-		Arrays.sort(ids);
-		
-		clock  = new LeafClockPane();
-		init();
-	}
-	/**
-	*親ダイアログとデフォルトのタイムゾーンを指定してダイアログを生成します。
-	*@param owner 親ダイアログ
-	*@param zone タイムゾーン
-	*/
-	public LeafClockDialog(Dialog owner, TimeZone zone){
-		super(owner, null, false);
-		
-		getContentPane().setPreferredSize(new Dimension(380,210));
-		pack();
-		setResizable(false);
-		setLayout(null);
-		
-		addWindowListener(new WindowAdapter(){
-			public void windowClosing(WindowEvent e){
-				stop();
-			}
-		});
-		utczone   = TimeZone.getTimeZone("UTC");
-		this.zone = (zone != null)? zone : TimeZone.getDefault();
-		
-		ids = TimeZone.getAvailableIDs();
-		Arrays.sort(ids);
+		timezone = (tz!=null)? tz : TimeZone.getDefault();
+		utczone  = TimeZone.getTimeZone("UTC");
+		Arrays.sort(ids = TimeZone.getAvailableIDs());
 		
 		clock = new LeafClockPane();
+		setLayout(null);
 		init();
 	}
 	/**
-	*ダイアログの表示を初期化します。
+	*親ダイアログとタイムゾーンを指定してダイアログを生成します。
+	*@param owner 親ダイアログ
+	*@param tz デフォルトのタイムゾーン
 	*/
-	public void init(){
+	public LeafClockDialog(Dialog owner, TimeZone tz){
+		super(owner, false);
+		setContentSize(new Dimension(380, 210));
+		setResizable(false);
 		
-		setTitle(LeafLangManager.get("World Clock", "世界時計"));
+		addWindowListener(new WindowAdapter(){
+			public void windowClosing(WindowEvent e){
+				stop();
+			}
+		});
+		timezone = (tz!=null)? tz : TimeZone.getDefault();
+		utczone  = TimeZone.getTimeZone("UTC");
+		Arrays.sort(ids = TimeZone.getAvailableIDs());
+		
+		clock = new LeafClockPane();
+		setLayout(null);
+		init();
+	}
+	/**
+	*ダイアログの表示と配置を初期化します。
+	*/
+	@Override public void init(){
+		setTitle(translate("title"));
 		getContentPane().removeAll();
 		
 		/*アナログ時計*/
@@ -132,7 +115,7 @@ public final class LeafClockDialog extends LeafDialog{
 		panel = new JPanel(new GridLayout(4, 1));
 		panel.setBorder(new TitledBorder(
 			new EtchedBorder(EtchedBorder.LOWERED),
-			LeafLangManager.get("Information", "インフォメーション")
+			translate("panel_information")
 		));
 		panel.setBounds(160, 10, 210, 155);
 		add(panel);
@@ -141,7 +124,7 @@ public final class LeafClockDialog extends LeafDialog{
 		panel.add(lbzone = new JLabel());
 		
 		/*時刻*/
-		panel.add(lbtime = new ClockLabel(zone));
+		panel.add(lbtime = new ClockLabel(timezone));
 		
 		/*UTCゾーン名*/
 		panel.add(new JLabel(utczone.getDisplayName()));
@@ -151,19 +134,20 @@ public final class LeafClockDialog extends LeafDialog{
 		
 		/*タイムゾーン選択*/
 		combo = new JComboBox(ids);
-		combo.setSelectedItem(zone.getID());
+		combo.setSelectedItem(timezone.getID());
 		combo.setBounds(5, 180, 150, 22);
 		add(combo);
 		
 		combo.addItemListener(new ItemListener(){
 			public void itemStateChanged(ItemEvent e){
-				setTimeZone((String)combo.getSelectedItem());
+				setTimeZone(TimeZone.getTimeZone(
+					(String)combo.getSelectedItem()));
 			}
 		});
 		
 		/*閉じるボタン*/
-		bclose = new JButton(LeafLangManager.get("Exit","閉じる(X)"));
-		bclose.setMnemonic(KeyEvent.VK_X);
+		bclose = new JButton(translate("button_close"));
+		bclose.setMnemonic(KeyEvent.VK_C);
 		bclose.setBounds(270, 180, 100, 22);
 		add(bclose);
 		
@@ -175,23 +159,23 @@ public final class LeafClockDialog extends LeafDialog{
 		});
 		
 		setTimeZone(TimeZone.getDefault());
-		restart();
+		start();
 	}
 	/**
-	*タイムゾーン名を指定してダイアログを更新します。
-	*@param ID タイムゾーンの名前
+	*選択されているタイムゾーンを返します。
+	*@return 時計のタイムゾーン
 	*/
-	public void setTimeZone(String ID){
-		setTimeZone(TimeZone.getTimeZone(ID));
+	public TimeZone getTimeZone(){
+		return timezone;
 	}
 	/**
 	*タイムゾーンを指定してダイアログを更新します。
-	*@param zone タイムゾーン
+	*@param tz タイムゾーン
 	*/
-	public void setTimeZone(TimeZone zone){
-		clock.setTimeZone(this.zone = zone);
-		lbzone.setText(zone.getDisplayName());
-		lbtime.setTimeZone(zone);
+	public void setTimeZone(TimeZone tz){
+		clock.setTimeZone(timezone = tz);
+		lbzone.setText(tz.getDisplayName());
+		lbtime.setTimeZone(tz);
 	}
 	/**
 	*現在時刻を表示するラベルです
@@ -204,7 +188,8 @@ public final class LeafClockDialog extends LeafDialog{
 		*@param zone タイムゾーン
 		*/
 		public ClockLabel(TimeZone zone){
-			format = DateFormat.getDateTimeInstance(DateFormat.FULL, DateFormat.MEDIUM);
+			format = DateFormat.getDateTimeInstance(
+				DateFormat.FULL, DateFormat.MEDIUM);
 			setTimeZone(zone);
 		}
 		/**
@@ -218,7 +203,8 @@ public final class LeafClockDialog extends LeafDialog{
 		*時計表示を更新します。
 		*/
 		public void update(){
-			setText(format.format(Calendar.getInstance(zone).getTime()));
+			setText(format.format(
+				Calendar.getInstance(zone).getTime()));
 		}
 	}
 	/**
@@ -233,7 +219,17 @@ public final class LeafClockDialog extends LeafDialog{
 		}
 	}
 	/**
-	*スレッドを停止して計時を終了します。
+	*時計の自動的な再描画を開始します。
+	*/
+	private void start(){
+		try{
+			timer = new Timer();
+			timer.schedule(new ClockTimer(), 0, 1000);
+			clock.start();
+		}catch(NullPointerException ex){}
+	}
+	/**
+	*時計の自動的な再描画を停止します。
 	*/
 	private void stop(){
 		try{
@@ -243,21 +239,11 @@ public final class LeafClockDialog extends LeafDialog{
 		}catch(NullPointerException ex){}
 	}
 	/**
-	*スレッドを生成して計時を再開します。
-	*/
-	private void restart(){
-		try{
-			timer = new Timer();
-			timer.schedule(new ClockTimer(),0,1000);
-			clock.restart();
-		}catch(NullPointerException ex){}
-	}
-	/**
 	*ダイアログの表示と非表示を切り替えます。
 	*@param visible 表示する場合true
 	*/
 	public void setVisible(boolean visible){
-		if(visible)restart();
+		if(visible) start();
 		else stop();
 		super.setVisible(visible);
 	}

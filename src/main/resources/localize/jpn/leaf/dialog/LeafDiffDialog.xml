@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LeafDiffDialog>
+  <entry key="title" value="Diff"/>
+  <entry key="button_open_old_file" value="比較元"/>
+  <entry key="button_open_new_file" value="比較先"/>
+  <entry key="case_sensitive" value="大文字と小文字を区別(S)"/>
+  <entry key="button_diff" value="差分抽出(D)"/>
+  <entry key="button_close" value="閉じる(C)"/>
+  <entry key="exists_file_is_empty" value="ファイル名を入力してください。"/>
+  <entry key="exists_file_is_directory" value="「%s」はディレクトリ名であるため利用できません。"/>
+  <entry key="exists_file_not_exist" value="ファイル「%s」は存在しません。"/>
+</LeafDiffDialog>

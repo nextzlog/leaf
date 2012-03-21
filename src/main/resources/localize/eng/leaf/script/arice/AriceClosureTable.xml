@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<AriceClosureTable>
+  <entry key="checkClosure_exception" value="Illegal closure is exposed."/>
+</AriceClosureTable>
