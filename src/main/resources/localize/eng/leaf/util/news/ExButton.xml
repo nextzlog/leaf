@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<ExButton>
-  <entry key="button_ok" value=" OK "/>
-  <entry key="button_cancel" value=" Cancel "/>
-  <entry key="button_settings" value=" Settings "/>
-  <entry key="button_news" value=" News "/>
-  <entry key="button_stop" value=" Stop "/>
-</ExButton>

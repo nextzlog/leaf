@@ -1,11 +1,10 @@
-/**************************************************************************************
-ライブラリ「LeafAPI」 開発開始：2010年6月8日
-開発言語：Pure Java SE 6
-開発者：東大アマチュア無線クラブ
-***************************************************************************************
-License Documents: See the license.txt (under the folder 'readme')
-Author: University of Tokyo Amateur Radio Club / License: GPL
-**************************************************************************************/
+/*****************************************************************************
+ * Java Class Library 'LeafAPI' since 2010 June 8th
+ * Language: Java Standard Edition 7
+ *****************************************************************************
+ * License : GNU General Public License v3 (see LICENSE.txt)
+ * Author: University of Tokyo Amateur Radio Club (JA1ZLO)
+*****************************************************************************/
 package leaf.shell.build;
 
 import javax.swing.JComponent;
@@ -14,32 +13,32 @@ import javax.xml.namespace.QName;
 import javax.xml.stream.events.StartElement;
 
 /**
- *"separator"要素の開始イベントを処理します。
- *
- *@author 東大アマチュア無線クラブ
- *@since  Leaf 1.3 作成：2011年12月11日
+ * セパレータを追加する記述に対するマーカーとなります。
+ * 従ってこのハンドラーでは実質的な処理は行われません。
+ * 
+ * @author 東大アマチュア無線クラブ
+ * @since  Leaf 1.3 作成：2011年12月11日
  */
-class SeparatorHandler extends ElementHandler{
+final class SeparatorHandler extends ElementHandler{
 	/**
-	 *ハンドラーを構築します。
+	 * ハンドラーを構築します。
 	 */
 	public SeparatorHandler(){}
 	/**
-	 *このハンドラーが処理する要素の名前を返します。
-	 *
-	 *@return item
+	 * このハンドラーが処理する要素の名前を返します。
+	 * 
+	 * @return item
 	 */
 	@Override public QName name(){
 		return new QName("separator");
 	}
 	/**
-	 *イベントオブジェクトを受け取って処理を実行します。
-	 *
-	 *@param e 受け取るイベント
-	 *@return 処理の結果生成されたコンポーネント
-	 *@throws Exception この処理が発生しうる例外
+	 * スタックにプッシュするためのダミーを返します。
+	 * 
+	 * @param e 受け取るイベント
+	 * @return nullでないダミーコンポーネント
 	 */
-	@Override public JComponent handle(StartElement e) throws Exception{
-		return new JSeparator();
+	@Override public JComponent handle(StartElement e){
+		return new JSeparator(); // dummy (not null)
 	}
 }

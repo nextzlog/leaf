@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<WallpaperDialog>
+  <entry key="title" value="Wallpaper"/>
+  <entry key="button_cancel" value="Cancel"/>
+  <entry key="button_color" value="Select Color"/>
+  <entry key="button_ok" value="OK"/>
+  <entry key="button_open" value="Open"/>
+  <entry key="check_enable" value="Use photo as wallpaper"/>
+  <entry key="cropper" value="Trim picture"/>
+  <entry key="file_unavailable" value="Unavailable File"/>
+  <entry key="label_color" value="Background"/>
+  <entry key="label_trans" value="Transparency :"/>
+</WallpaperDialog>

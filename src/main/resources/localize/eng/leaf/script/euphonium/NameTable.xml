@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<NameTable>
-  <entry key="createLocal_exception" value="%s is already declared."/>
-  <entry key="createParam_exception" value="%s is already declared."/>
-  <entry key="search_exception" value="%s is not declared."/>
-</NameTable>

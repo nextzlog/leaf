@@ -23,8 +23,3 @@ javadoc {
 	options.header("<a href='http://nextzlog.github.io/leaf'>Leaf API</a>")
 	options.charSet = options.encoding = utf8
 }
-
-jar {
-	manifest.attributes 'Main-Class': 'leaf.demo.Demo'
-	manifest.attributes 'SplashScreen-Image': 'images/style/LEAF.png'
-}

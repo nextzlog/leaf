@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<AriceLexTable>
-  <entry key="error_char_exception" value="&apos;%s&apos; is illegal here."/>
-  <entry key="readString_exception" value="String literal must be written in a line."/>
-  <entry key="checkNextToken_exception" value="&quot;%s&quot; is not expected here."/>
-</AriceLexTable>

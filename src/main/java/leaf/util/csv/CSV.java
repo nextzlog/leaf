@@ -1,11 +1,10 @@
-/**************************************************************************************
-ライブラリ「LeafAPI」 開発開始：2010年6月8日
-開発言語：Pure Java SE 6
-開発者：東大アマチュア無線クラブ
-***************************************************************************************
-License Documents: See the license.txt (under the folder 'readme')
-Author: University of Tokyo Amateur Radio Club / License: GPL
-**************************************************************************************/
+/*****************************************************************************
+ * Java Class Library 'LeafAPI' since 2010 June 8th
+ * Language: Java Standard Edition 7
+ *****************************************************************************
+ * License : GNU General Public License v3 (see LICENSE.txt)
+ * Author: University of Tokyo Amateur Radio Club (JA1ZLO)
+*****************************************************************************/
 package leaf.util.csv;
 
 import java.io.BufferedReader;
@@ -17,35 +16,37 @@ import java.io.Writer;
 import java.util.ArrayList;
 
 /**
- *CSV形式を扱うためのユーティリティです。
- *
- *CSV形式はアプリケーションと既存のソフトウェアとの連携を容易に
- *しますが、以下の理由によりCSVの積極的な利用は推奨されません。
+ * CSV形式を扱うためのユーティリティです。
+ * 
+ * CSV形式はアプリケーションと既存のソフトウェアとの連携を容易に
+ * しますが、以下の理由によりCSVの積極的な利用は推奨されません。
  *<pre>
  *  ・CSVには統一された標準仕様が存在しない
  *  ・CSVの仕様はソフトウェアによって異なる
  *</pre>
  *
- *@author 東大アマチュア無線クラブ
- *@since  Leaf 1.3 作成：2011年9月16日
+ * @author 東大アマチュア無線クラブ
+ * @since  Leaf 1.3 作成：2011年9月16日
  */
 public class CSV implements Serializable{
-	final ArrayList<Row> table;
+	private static final long serialVersionUID = 1L;
+	private final ArrayList<Row> table;
 	
 	/**
-	 *空のCSVテーブルを生成します。
+	 * 空のCSVテーブルを生成します。
 	 */
 	public CSV(){
 		table = new ArrayList<Row>();
 	}
+	
 	/**
-	 *指定されたセルをテーブルに配置します。
-	 *
-	 *@param row セルの行
-	 *@param column セルの列
-	 *@param cell 配置するセル
-	 *@return 以前配置されていたセル
-	 *@throws IndexOutOfBoundsException 行、列が負の場合
+	 * 指定されたセルをテーブルに配置します。
+	 * 
+	 * @param row セルの行
+	 * @param column セルの列
+	 * @param cell 配置するセル
+	 * @return 以前配置されていたセル
+	 * @throws IndexOutOfBoundsException 行、列が負の場合
 	 */
 	public Cell put(int row, int column, Cell cell){
 		checkRow(row);
@@ -58,24 +59,26 @@ public class CSV implements Serializable{
 			return null;
 		}
 	}
+	
 	/**
-	 *指定された位置のセルを返します。
-	 *
-	 *@param row セルの行
-	 *@param column セルの列
-	 *@return 指定した位置のセル 範囲外の場合null
-	 *@throws IndexOutOfBoundsException 行、列が負の場合
+	 * 指定された位置のセルを返します。
+	 * 
+	 * @param row セルの行
+	 * @param column セルの列
+	 * @return 指定した位置のセル 範囲外の場合null
+	 * @throws IndexOutOfBoundsException 行、列が負の場合
 	 */
 	public Cell get(int row, int column){
 		checkRow(row);
 		return getRow(row).get(column);
 	}
+	
 	/**
-	 *指定した位置に行を挿入もしくは追加します。
-	 *
-	 *@param row 行の挿入、追加位置
-	 *@param line 挿入する行
-	 *@throws IndexOutOfBoundsException 行が負の場合
+	 * 指定した位置に行を挿入もしくは追加します。
+	 * 
+	 * @param row 行の挿入、追加位置
+	 * @param line 挿入する行
+	 * @throws IndexOutOfBoundsException 行が負の場合
 	 */
 	public void addRow(int row, Row line){
 		checkRow(row);
@@ -85,23 +88,25 @@ public class CSV implements Serializable{
 			else table.add(new Row());
 		}
 	}
+	
 	/**
-	 *指定した行番号の行を返します。
-	 *
-	 *@param row 行番号
-	 *@return 指定した位置の行 範囲外の場合null
-	 *@throws IndexOutOfBoundsException 行が負の場合
+	 * 指定した行番号の行を返します。
+	 * 
+	 * @param row 行番号
+	 * @return 指定した位置の行 範囲外の場合null
+	 * @throws IndexOutOfBoundsException 行が負の場合
 	 */
 	public Row getRow(int row){
 		checkRow(row);
 		return (row<table.size())? table.get(row) : null;
 	}
+	
 	/**
-	 *指定した行をテーブルから削除します。
-	 *
-	 *@param row 削除する行
-	 *@return 削除した行
-	 *@throws IndexOutOfBoundsException 行が範囲外の場合
+	 * 指定した行をテーブルから削除します。
+	 * 
+	 * @param row 削除する行
+	 * @return 削除した行
+	 * @throws IndexOutOfBoundsException 行が範囲外の場合
 	 */
 	public Row removeRow(int row){
 		checkRow(row);
@@ -109,28 +114,31 @@ public class CSV implements Serializable{
 		else throw new IndexOutOfBoundsException(
 		String.format("row(%d) out of table size", row));
 	}
+	
 	/**
-	 *指定された位置が正当な位置であるか確認します。
-	 *@param row セルの行
-	 *@throws IndexOutOfBoundsException 負の場合
+	 * 指定された位置が正当な位置であるか確認します。
+	 * @param row セルの行
+	 * @throws IndexOutOfBoundsException 負の場合
 	 */
 	private void checkRow(int row){
 		if(row >= 0) return;
 		throw new IndexOutOfBoundsException(
 		String.format("row(%d) must be non negative", row));
 	}
+	
 	/**
-	 *テーブルの行数を返します。
-	 *
-	 *@return テーブルの行数
+	 * テーブルの行数を返します。
+	 * 
+	 * @return テーブルの行数
 	 */
 	public int getRowCount(){
 		return table.size();
 	}
+	
 	/**
-	 *テーブルの内容をエスケープ表現を含まないCSV形式で出力します。
-	 *
-	 *@return CSV形式での文字列表現 テーブルが空なら空の文字列
+	 * テーブルの内容をエスケープ表現を含まないCSV形式で出力します。
+	 * 
+	 * @return CSV形式での文字列表現 テーブルが空なら空の文字列
 	 */
 	public String toString(){
 		StringBuilder sb = new StringBuilder();
@@ -141,10 +149,11 @@ public class CSV implements Serializable{
 		if(size>0) sb.append(table.get(size-1));
 		return sb.toString();
 	}
+	
 	/**
-	 *テーブルの内容をエスケープされたCSV形式で出力します。
-	 *
-	 *@return CSV形式での正当な文字列表現 テーブルが空なら空の文字列
+	 * テーブルの内容をエスケープされたCSV形式で出力します。
+	 * 
+	 * @return CSV形式での正当な文字列表現 テーブルが空なら空の文字列
 	 */
 	public String canonical(){
 		StringBuilder sb = new StringBuilder();
@@ -155,10 +164,11 @@ public class CSV implements Serializable{
 		if(size>0) sb.append(table.get(size-1).canonical());
 		return sb.toString();
 	}
+	
 	/** 
-	 *テーブルの内容を長さの揃った二次元配列で出力します。
-	 *
-	 *@return CSVの内容をコピーした二次元配列
+	 * テーブルの内容を長さの揃った二次元配列で出力します。
+	 * 
+	 * @return CSVの内容をコピーした二次元配列
 	 */
 	public String[][] toArray(){
 		final int rowCount = table.size();
@@ -177,19 +187,21 @@ public class CSV implements Serializable{
 		}
 		return data;
 	}
+	
 	/**
-	 *テーブルのデータを全て消去します。
+	 * テーブルのデータを全て消去します。
 	 */
 	public void clear(){
 		table.clear();
 		table.trimToSize();
 	}
+	
 	/**
-	 *読み込み元を指定してテーブルを生成します。
-	 *
-	 *@param reader CSV形式を読み込むリーダー
-	 *@return 読み込まれたCSVテーブル
-	 *@throws IOException 読み込みに失敗した場合
+	 * 読み込み元を指定してテーブルを生成します。
+	 * 
+	 * @param reader CSV形式を読み込むリーダー
+	 * @return 読み込まれたCSVテーブル
+	 * @throws IOException 読み込みに失敗した場合
 	 */
 	public static CSV read(Reader reader) throws IOException{
 		final BufferedReader br;
@@ -208,11 +220,12 @@ public class CSV implements Serializable{
 			br.close();
 		}
 	}
+	
 	/**
-	 *テーブルのデータをCSV形式で出力します。
-	 *
-	 *@param writer CSV形式を書き込むライター
-	 *@throws IOException 書き込みに失敗した場合
+	 * テーブルのデータをCSV形式で出力します。
+	 * 
+	 * @param writer CSV形式を書き込むライター
+	 * @throws IOException 書き込みに失敗した場合
 	 */
 	public void write(Writer writer) throws IOException{
 		final BufferedWriter bw;

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LeafCellTablePane>
+  <entry key="button_open" value="開く"/>
+  <entry key="button_save" value="保存"/>
+  <entry key="button_start" value="スタート"/>
+  <entry key="button_pause" value="一時停止"/>
+  <entry key="button_reset" value="リセット"/>
+  <entry key="failed_read_pattern" value="パターンの読み込みに失敗しました"/>
+  <entry key="failed_save_pattern" value="パターンの保存に失敗しました"/>
+  <entry key="illegal_size_pattern" value="パターンのサイズが不正です"/>
+  <entry key="filechooser_filter_name" value="バイナリ(*.bin)"/>
+</LeafCellTablePane>

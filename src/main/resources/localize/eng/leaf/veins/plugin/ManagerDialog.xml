@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ManagerDialog>
+  <texts>
+    <entry key="title"        value="Plugin Manager"/>
+    <entry key="button_cfg"   value="Config"/>
+    <entry key="button_add"   value="Add"/>
+    <entry key="button_del"   value="Delete"/>
+    <entry key="button_close" value="Close"/>
+    <entry key="jar_archive"  value="Jar Arcive"/>
+  </texts>
+</ManagerDialog>

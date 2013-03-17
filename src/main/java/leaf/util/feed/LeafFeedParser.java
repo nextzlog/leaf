@@ -1,11 +1,10 @@
-/**************************************************************************************
-ライブラリ「LeafAPI」 開発開始：2010年6月8日
-開発言語：Pure Java SE 6
-開発者：東大アマチュア無線クラブ
-***************************************************************************************
-License Documents: See the license.txt (under the folder 'readme')
-Author: University of Tokyo Amateur Radio Club / License: GPL
-**************************************************************************************/
+/*****************************************************************************
+ * Java Class Library 'LeafAPI' since 2010 June 8th
+ * Language: Java Standard Edition 7
+ *****************************************************************************
+ * License : GNU General Public License v3 (see LICENSE.txt)
+ * Author: University of Tokyo Amateur Radio Club (JA1ZLO)
+*****************************************************************************/
 package leaf.util.feed;
 
 import java.io.BufferedInputStream;
@@ -19,110 +18,112 @@ import javax.xml.stream.*;
 import javax.xml.stream.events.XMLEvent;
 
 /**
- *フィードパーサーの基底実装です。
- *
- *@author 東大アマチュア無線クラブ
- *@since  Leaf 1.3 作成：2011年7月4日
+ * フィードパーサーの基底実装です。
+ * 
+ * @author 東大アマチュア無線クラブ
+ * @since  Leaf 1.3 作成：2011年7月4日
  */
-abstract class LeafFeedParser{
+abstract class LeafFeedParser {
 	private final Map<Integer, XMLHandler> handlers;
 	
 	/**
-	 *パーサーを生成します。
-	 *
+	 * パーサーを生成します。
 	 */
-	public LeafFeedParser(){
+	public LeafFeedParser() {
 		handlers = new HashMap<Integer, XMLHandler>();
 	}
+	
 	/**
-	 *このパーサーにイベントハンドラーを登録します。
-	 *
-	 *@param type 関連付けるイベントの種類
-	 *@param handler イベントハンドラー
+	 * このパーサーにイベントハンドラーを登録します。
+	 * 
+	 * @param type 関連付けるイベントの種類
+	 * @param handler イベントハンドラー
 	 */
-	protected final void addHandler(int type, XMLHandler handler){
+	protected final void addHandler(int type, XMLHandler handler) {
 		handlers.put(type, handler);
 	}
+	
 	/**
-	 *このパーサーに関連付けられるMIMEtypeのリストを返します。
-	 *
-	 *@return MIMEtypeのリスト
+	 * このパーサーに関連付けられるMIMEtypeのリストを返します。
+	 * 
+	 * @return MIMEtypeのリスト
 	 */
 	public abstract List<String> getMimeTypes();
 	
 	/**
-	 *読み込み先URLを指定してフィードを取得します。
-	 *
-	 *@param url フィードを読み込むURL
-	 *@return フィード
-	 *@throws IOException 読み込みに失敗した場合
+	 * 読み込み先URLを指定してフィードを取得します。
+	 * 
+	 * @param url フィードを読み込むURL
+	 * @return フィード
+	 * @throws IOException 読み込みに失敗した場合
 	 */
 	public final LeafNewsFeed parse(URL url) throws IOException{
 		return parse(url.openStream());
 	}
+	
 	/**
-	 *読み込み先ストリームを指定してフィードを取得します。
-	 *
-	 *@param stream フィードを読み込むストリーム
-	 *@return フィード
-	 *@throws IOException 読み込みに失敗した場合
+	 * 読み込み先ストリームを指定してフィードを取得します。
+	 * 
+	 * @param stream フィードを読み込むストリーム
+	 * @return フィード
+	 * @throws IOException 読み込みに失敗した場合
 	 */
 	public LeafNewsFeed parse(InputStream stream) throws IOException{
 		XMLEventReader reader = null;
 		XMLInputFactory fact  = null;
-		try{
+		try {
 			fact = XMLInputFactory.newInstance();
 			stream = new BufferedInputStream(stream);
 			reader = fact.createXMLEventReader(stream);
-			while(reader.hasNext()){
+			while(reader.hasNext()) {
 				XMLEvent e = reader.nextEvent();
 				final int type = e.getEventType();
 				XMLHandler handler = handlers.get(type);
 				if(handler != null) handler.handle(e);
 			}
 			return null;
-		}catch(FactoryConfigurationError err){
+		} catch(FactoryConfigurationError err) {
 			throw new IOException(err);
-		}catch(XMLStreamException ex){
+		} catch(XMLStreamException ex) {
 			throw new IOException(ex);
-		}catch(Exception ex){
+		} catch(Exception ex) {
 			throw new IOException(ex);
-		}finally{
+		} finally {
 			try{
 				if(stream != null) stream.close();
 				if(reader != null) reader.close();
-			}catch(XMLStreamException ex){
+			}catch(XMLStreamException ex) {
 				throw new IOException(ex);
 			}
 		}
 	}
+	
 	/**
-	 *各種イベント毎に処理を実行します。
-	 *
+	 * 各種イベント毎に処理を実行します。
 	 */
-	public abstract class XMLHandler{
+	public abstract class XMLHandler {
 		public abstract void handle(XMLEvent e) throws Exception;
 		private Map<String, TagHandler> handlers = null;
-		public final void addHandler(TagHandler handler){
-			if(handlers == null){
+		public final void addHandler(TagHandler handler) {
+			if(handlers == null) {
 				handlers = new HashMap<String, TagHandler>();
 			}
 			handlers.put(handler.tag().toLowerCase(), handler);
 		}
-		public final TagHandler getHandler(String tag){
+		public final TagHandler getHandler(String tag) {
 			if(handlers == null) return null;
 			return handlers.get(tag.toLowerCase());
 		}
-		public final boolean isSupported(String tag){
+		public final boolean isSupported(String tag) {
 			if(handlers == null) return false;
 			return handlers.get(tag.toLowerCase()) != null;
 		}
 	}
+	
 	/**
-	 *各種タグ要素に対応した処理を実行します。
-	 *
+	 * 各種タグ要素に対応した処理を実行します。
 	 */
-	public interface TagHandler{
+	public interface TagHandler {
 		public void handle(XMLEvent e) throws Exception;
 		public String tag();
 	}

@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<NameTable>
-  <entry key="createLocal_exception" value="変数「%s」が既に宣言されています"/>
-  <entry key="createParam_exception" value="引数「%s」が既に宣言されています"/>
-  <entry key="search_exception" value="変数または引数「%s」は宣言されていません"/>
-</NameTable>

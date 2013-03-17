@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<VirtualMachine>
-  <entry key="execute_exception_switch" value="Virtual Machine has a bug in intermediate language."/>
-  <entry key="execute_exception_overflow" value="Stack Overflow : function call nest is too deep?"/>
-</VirtualMachine>

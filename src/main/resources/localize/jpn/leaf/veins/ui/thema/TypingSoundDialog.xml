@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<TypingSoundDialog>
+  <entry key="title" value="タイピング音"/>
+  <entry key="checkbox_enable" value="タイピング音を有効にする"/>
+  <entry key="button_open" value="開く"/>
+  <entry key="button_play" value="再生"/>
+  <entry key="button_ok" value="OK"/>
+  <entry key="button_cancel" value="キャンセル"/>
+  <entry key="file_unavailable" value="無効なファイル"/>
+</TypingSoundDialog>

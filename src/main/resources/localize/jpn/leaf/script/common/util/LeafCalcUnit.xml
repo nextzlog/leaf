@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<LeafCalcUnit>
-  <entry key="error_1_exception" value="単項演算子「%s」は %s には適用できません"/>
-  <entry key="error_2_exception" value="二項演算子「%s」は %s と %s には適用できません"/>
-</LeafCalcUnit>

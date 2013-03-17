@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<BrowseUtils>
+  <entry key="browse" value="ブラウズ"/>
+  <entry key="browse_not_supported" value="実行環境がブラウズをサポートしていません。"/>
+</BrowseUtils>

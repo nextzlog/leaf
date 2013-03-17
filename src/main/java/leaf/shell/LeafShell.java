@@ -1,11 +1,10 @@
-/**************************************************************************************
-ライブラリ「LeafAPI」 開発開始：2010年6月8日
-開発言語：Pure Java SE 6
-開発者：東大アマチュア無線クラブ
-***************************************************************************************
-License Documents: See the license.txt (under the folder 'readme')
-Author: University of Tokyo Amateur Radio Club / License: GPL
-**************************************************************************************/
+/*****************************************************************************
+ * Java Class Library 'LeafAPI' since 2010 June 8th
+ * Language: Java Standard Edition 7
+ *****************************************************************************
+ * License : GNU General Public License v3 (see LICENSE.txt)
+ * Author: University of Tokyo Amateur Radio Club (JA1ZLO)
+*****************************************************************************/
 package leaf.shell;
 
 import java.io.PrintWriter;
@@ -14,14 +13,13 @@ import java.text.DateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Locale;
-import java.util.Map;
 import java.util.logging.*;
 
 /**
- *アプリケーションが装備するコマンドシステムの中核となるクラスです。
- *
- *@author 東大アマチュア無線クラブ
- *@since  Leaf 1.3 作成：2011年12月11日
+ * アプリケーションが装備するコマンドシステムの中核となるクラスです。
+ * 
+ * @author 東大アマチュア無線クラブ
+ * @since  Leaf 1.3 作成：2011年12月11日
  */
 public class LeafShell {
 	private Locale locale = Locale.getDefault();
@@ -29,7 +27,7 @@ public class LeafShell {
 	private final Logger logger;
 	
 	/**
-	 *シェルを構築します。
+	 * シェルを構築します。
 	 */
 	public LeafShell(){
 		table = new HashMap<String, Command>();
@@ -42,27 +40,41 @@ public class LeafShell {
 		logger.addHandler(cons);
 	}
 	/**
-	 *新しいコマンドをシェルにインストールします。
-	 *
-	 *@param cmd 追加するコマンド
+	 * 新しいコマンドをシェルにインストールします。
+	 * 
+	 * @param cmd 追加するコマンド
 	 */
 	public void install(Command cmd){
-		table.put(cmd.getClass().getSimpleName(), cmd);
+		table.put(cmd.getName(), cmd);
 	}
 	/**
-	 *指定されたコマンド名に対応するコマンドを返します。
-	 *
-	 *@param name コマンド名
-	 *@return 対応するコマンド 存在しない場合null
+	 * コマンドをシェルからアンインストールします。
+	 * 
+	 * @param cmd 削除するコマンド
+	 */
+	public void uninstall(Command cmd){
+		table.remove(cmd.getName());
+	}
+	/**
+	 * シェルに登録されている全てのコマンドを削除します。
+	 */
+	public void clear(){
+		table.clear();
+	}
+	/**
+	 * 指定されたコマンド名に対応するコマンドを返します。
+	 * 
+	 * @param name コマンド名
+	 * @return 対応するコマンド 存在しない場合null
 	 */
 	public Command getCommand(String name){
 		return table.get(name);
 	}
 	/**
-	 *コマンド名と引数を指定してコマンドを実行します。
-	 *
-	 *@param name コマンド名
-	 *@param args コマンドに渡す引数
+	 * コマンド名と引数を指定してコマンドを実行します。
+	 * 
+	 * @param name コマンド名
+	 * @param args コマンドに渡す引数
 	 */
 	public void call(String name, Object... args){
 		Command cmd = table.get(name);
@@ -76,10 +88,10 @@ public class LeafShell {
 		}else logger.warning("Not found : " + name);
 	}
 	/**
-	 *シェルに適用されるロケールを設定します。
-	 *
-	 *@param locale 適用するロケール
-	 *@throws NullPointerException ロケールがnullの場合
+	 * シェルに適用されるロケールを設定します。
+	 * 
+	 * @param locale 適用するロケール
+	 * @throws NullPointerException ロケールがnullの場合
 	 */
 	public void setLocale(Locale locale) throws NullPointerException{
 		if(!locale.equals(this.locale)){
@@ -92,17 +104,17 @@ public class LeafShell {
 		}
 	}
 	/**
-	 *シェルに適用されているロケールを返します。
-	 *
-	 *@return 適用されているロケール
+	 * シェルに適用されているロケールを返します。
+	 * 
+	 * @return 適用されているロケール
 	 */
 	public Locale getLocale(){
 		return locale;
 	}
 	/**
-	 *シェルで発生した全ての例外の出力書式を定義します。
-	 *
-	 *@since 2011年12月11日
+	 * シェルで発生した全ての例外の出力書式を定義します。
+	 * 
+	 * @since 2011年12月11日
 	 */
 	private final class ShellLogFormatter extends Formatter{
 		private final Date date = new Date();

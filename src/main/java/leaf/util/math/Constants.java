@@ -1,24 +1,21 @@
-/**************************************************************************************
-ライブラリ「LeafAPI」 開発開始：2010年6月8日
-開発言語：Pure Java SE 6
-開発者：東大アマチュア無線クラブ
-***************************************************************************************
-License Documents: See the license.txt (under the folder 'readme')
-Author: University of Tokyo Amateur Radio Club / License: GPL
-**************************************************************************************/
+/*****************************************************************************
+ * Java Class Library 'LeafAPI' since 2010 June 8th
+ * Language: Java Standard Edition 7
+ *****************************************************************************
+ * License : GNU General Public License v3 (see LICENSE.txt)
+ * Author: University of Tokyo Amateur Radio Club (JA1ZLO)
+*****************************************************************************/
 package leaf.util.math;
 
 import java.math.BigDecimal;
 
 /**
- *数値計算で用いられる各定数を定義します。
+ * 数値計算で用いられる各定数を定義します。
  *
- *@author 東大アマチュア無線クラブ
- *@since  Leaf 1.3 2012年2月2日
+ * @author 東大アマチュア無線クラブ
+ * @since  Leaf 1.3 2012年2月2日
  */
 final class Constants{
-	public static final int SCALE = 50;
-	
 	public static final BigDecimal E = new BigDecimal
 	("2.71828182845904523536028747135266249775724709369995957");
 	

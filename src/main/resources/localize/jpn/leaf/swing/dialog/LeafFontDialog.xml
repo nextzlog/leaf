@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LeafFontDialog>
+  <entry key="title" value="フォント"/>
+  <entry key="label_font_name" value="フォント名"/>
+  <entry key="label_font_style" value="書式"/>
+  <entry key="label_font_size" value="サイズ"/>
+  <entry key="font_style_plain" value="標準"/>
+  <entry key="font_style_italic" value="斜体"/>
+  <entry key="font_style_bold" value="太字"/>
+  <entry key="font_style_bold_italic" value="太字 斜体"/>
+  <entry key="label_font_sample" value="Aa あぁ アァ 亜宇"/>
+  <entry key="label_font_sample_title" value="サンプル"/>
+  <entry key="button_ok" value="OK"/>
+  <entry key="button_cancel" value="キャンセル"/>
+</LeafFontDialog>

@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<ClassTable>
-  <entry key="add_exception" value="%s と同名のクラスが既にインポートされています"/>
-  <entry key="get_exception" value="%s はインポートされていません"/>
-  <entry key="loadClass_exception" value="%s クラスは定義されていません"/>
-</ClassTable>
