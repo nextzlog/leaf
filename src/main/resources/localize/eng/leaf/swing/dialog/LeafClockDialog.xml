@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<LeafClockDialog>
-  <entry key="title" value="World Clock"/>
-  <entry key="panel_information" value="Information"/>
-  <entry key="button_close" value="Close"/>
-</LeafClockDialog>

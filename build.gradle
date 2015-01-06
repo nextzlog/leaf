@@ -1,25 +1,26 @@
-apply plugin: 'java'
-
-def utf8 = 'UTF-8'
-def java = '8'
-
-repositories {
-	mavenCentral()
+plugins {
+	id 'java'
+	id 'org.openjfx.javafxplugin' version '0.0.8'
 }
 
-dependencies {
-	implementation 'net.java.dev.jna:jna:3.2.7'
+def utf8 = 'UTF-8'
+
+repositories {
+	jcenter()
 }
 
 compileJava {
 	options.encoding = utf8
-	sourceCompatibility = java
-	targetCompatibility = java
+}
+
+javafx {
+	version = '11.0.2'
+	modules = ['javafx.swing']
 }
 
 javadoc {
-	destinationDir = file("doc")
-	options.links("https://docs.oracle.com/en/java/javase/$java/docs/api/")
-	options.header("<a href='http://nextzlog.github.io/leaf'>Leaf API</a>")
-	options.charSet = options.encoding = utf8
+	exclude '**/internal/*'
+	options.links('http://docs.oracle.com/javase/jp/8/api/')
+	options.charSet = utf8
+	options.encoding = utf8
 }

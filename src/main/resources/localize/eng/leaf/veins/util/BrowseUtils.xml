@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="utf-8" ?>
-<BrowseUtils>
-  <entry key="browse" value="Browse"/>
-  <entry key="browse_not_supported" value="Browse not supported by system."/>
-</BrowseUtils>

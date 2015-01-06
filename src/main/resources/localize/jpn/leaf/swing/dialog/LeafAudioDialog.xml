@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<LeafAudioDialog>
-  <entry key="title" value="オーディオプレーヤ"/>
-  <entry key="button_open" value="開く"/>
-  <entry key="button_play" value="再生 / 一時停止"/>
-  <entry key="button_stop" value="停止"/>
-  <entry key="button_loop" value="繰り返し再生"/>
-  <entry key="label_no_file_selected" value="未選択"/>
-</LeafAudioDialog>

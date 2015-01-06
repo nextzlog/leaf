@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<NotBorderedButton>
-  <entry key="button_ok" value=" OK "/>
-  <entry key="button_cancel" value=" キャンセル "/>
-  <entry key="button_settings" value=" 設定 "/>
-  <entry key="button_news" value=" 新着 "/>
-  <entry key="button_stop" value=" 中止 "/>
-</NotBorderedButton>
